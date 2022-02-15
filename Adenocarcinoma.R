@@ -1,18 +1,18 @@
 # Introduction
 #Install the folowing packages:
 
-install.packages("BiocManager")
-install.packages("forcats")
-install.packages("stringr")
-install.packages("ggplot2")
-install.packages("ggrepel")
-install.packages("readr")
-install.packages("tidyr")
-install.packages("survminer")
-BiocManager::install("GEOquery")
-BiocManager::install("limma")
-BiocManager::install("pheatmap")
-BiocManager::install("org.Hs.eg.db")
+#install.packages("BiocManager")
+#install.packages("forcats")
+#install.packages("stringr")
+#install.packages("ggplot2")
+#install.packages("ggrepel")
+#install.packages("readr")
+#install.packages("tidyr")
+#install.packages("survminer")
+#BiocManager::install("GEOquery")
+#BiocManager::install("limma")
+#BiocManager::install("pheatmap")
+#BiocManager::install("org.Hs.eg.db")
 
 
 # Importing the data
@@ -239,11 +239,9 @@ d <-glMDPlot(tfit, coef=1, status=dt, main=colnames(tfit)[1],
              side.main="Entrez_Gene_ID", counts=edata, groups=group, path = "..", launch=TRUE)
 d
 
-
 # save plot
 library(htmlwidgets)
 #htmlwidgets::saveWidget(d, "glimma-plot.html", selfcontained = T)
-
 
 # Session Info
 #devtools::session_info()
