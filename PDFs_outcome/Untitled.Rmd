@@ -1,0 +1,74 @@
+---
+title: "methylation"
+output: pdf_document
+always_allow_html: true
+---
+
+```{r setup, include=FALSE, eval=FALSE}
+knitr::opts_chunk$set(echo = TRUE, cache=TRUE)
+```
+
+## Introduction
+
+Install the following packages:
+
+```{r packages, echo=FALSE}
+library(rmarkdown) # paged table
+library(GEOquery) #geo query access
+library(dplyr)
+library(devtools)
+library(ggplot2)
+library(limma)
+library(Glimma)
+library(edgeR)
+library(kableExtra)
+library(ggrepel)
+Sys.setenv(VROOM_CONNECTION_SIZE = 25600000)
+
+```
+
+## Importing the data
+
+```{r importing, message=FALSE, echo=FALSE}
+
+my_id <- "GSE32866"
+gse <- getGEO(my_id)
+```
+
+Some datasets on GEO may be derived from different microarray platforms. Therefore the object gse is a list of different datasets. You can find out how many were used by checking the length of the gse object. Usually there will only be one platform and the dataset we want to analyse will be the first object in the list (gse[[1]]).
+
+```{r length, message=FALSE}
+length(gse)
+```
+
+## Extract the data
+
+```{r length2, message=FALSE}
+gse <- gse[[1]]
+gse
+```
+
+## Exploratory analysis
+
+The `exprs` function can retrieve the expression values as a data frame; with one column per-sample and one row per-gene.
+
+```{r, message=FALSE}
+pdata= pData(gse) #sample information
+edata= exprs(gse) #expression data
+fdata = fData(gse) #gene annotation
+```
+
+## Inspect the clinical variables
+
+Data submitted to GEO contain sample labels assigned by the experimenters, and some information about the processing protocol. All these data can be extracted by the pData function.
+
+
+
+
+
+
+
+
+
+
+
