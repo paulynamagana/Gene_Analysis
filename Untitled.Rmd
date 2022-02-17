@@ -10,9 +10,10 @@ knitr::opts_chunk$set(echo = TRUE, cache=TRUE)
 
 ## Introduction
 
-Install the following packages:
+Load the following packages:
 
-```{r packages, echo=FALSE}
+
+```{r load packages, echo=FALSE}
 library(rmarkdown) # paged table
 library(GEOquery) #geo query access
 library(dplyr)
@@ -23,6 +24,7 @@ library(Glimma)
 library(edgeR)
 library(kableExtra)
 library(ggrepel)
+library(tinytex)
 Sys.setenv(VROOM_CONNECTION_SIZE = 25600000)
 
 ```
@@ -63,8 +65,41 @@ fdata = fData(gse) #gene annotation
 Data submitted to GEO contain sample labels assigned by the experimenters, and some information about the processing protocol. All these data can be extracted by the pData function.
 
 
+```{r, message=FALSE}
+paged_table(pdata)
+```
 
 
+## Make sure dimensions match up
+
+```{r}
+dim(fdata)
+```
+
+```{r}
+dim(pdata)
+```
+
+```{r}
+dim(edata)
+```
+
+## Look at overall distributions
+
+For visualisation and statistical analysis, we will inspect the data to discover what scale the data are presented in. The methods we will use assume the data are on a log2 scale; typically in the range of 0 to 16.
+
+The `summary` function can then be used to print the distributions.
+
+```{r, message=FALSE}
+## exprs get the expression levels as a data frame and get the distribution
+kable(summary(exprs(gse)))
+```
+
+A boxplot can also be generated to see if the data have been normalised. If so, the distributions of each sample should be highly similar.
+
+```{r, message=FALSE}
+boxplot(edata,outline=FALSE)
+```
 
 
 
