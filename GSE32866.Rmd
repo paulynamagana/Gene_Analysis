@@ -33,13 +33,11 @@ library(ggrepel)
 library(tinytex)
 library(purrr)
 Sys.setenv(VROOM_CONNECTION_SIZE = 25600000)
-
 ```
 
 ## Importing the data
 
 ```{r importing, message=FALSE, warning=FALSE}
-
 my_id <- "GSE32866"
 gse <- getGEO(my_id)
 ```
@@ -95,11 +93,9 @@ The `summary` function can then be used to print the distributions.
 ## exprs get the expression levels as a data frame and get the distribution
 dat <- summary(exprs(gse))
 m <- matrix(1:ncol(dat), 5)
-
 for (i in 1:ncol(m)) {
  cat(kbl(dat[, m[, i]], 'latex', booktabs=TRUE), "\\newline")
 }
-
 ```
 
 A boxplot can also be generated to see if the data have been normalised. If so, the distributions of each sample should be highly similar.
@@ -120,7 +116,6 @@ kable(table(pdata$characteristics_ch1.6,pdata$characteristics_ch1.1), booktabs =
 ```
 
 ```{r}
-
 ```
 
 
@@ -154,16 +149,3 @@ library(pheatmap)
 corMatrix <- cor(exprs(gse),use="c")
 pheatmap(corMatrix)         
 ```
-
-
-
-
-
-
-
-
-
-
-
-
-
