@@ -42,6 +42,8 @@ my_id <- "GSE32866"
 gse <- getGEO(my_id)
 ```
 
+
+
 Some datasets on GEO may be derived from different microarray platforms. Therefore the object gse is a list of different datasets. You can find out how many were used by checking the length of the gse object. Usually there will only be one platform and the dataset we want to analyse will be the first object in the list (gse[[1]]).
 
 ```{r length, message=FALSE, comment=NA}
@@ -149,3 +151,12 @@ library(pheatmap)
 corMatrix <- cor(exprs(gse),use="c")
 pheatmap(corMatrix)         
 ```
+
+
+
+
+
+```{r,  comment=NA}
+session_info()
+```
+
