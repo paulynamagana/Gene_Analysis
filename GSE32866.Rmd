@@ -1,7 +1,18 @@
 ---
 title: "GSE32866, Genome-scale DNA methylation profiling of lung adenocarcinoma:"
 author: "Paulyna Magana"
-output: pdf_document
+output:
+  pdf_document:
+    toc: true
+    toc_depth: 2
+    number_sections: true
+    fig_width: 6
+    fig_height: 4
+    fig_caption: true
+header-includes:
+- \usepackage{gb4e}
+- \noautomath
+
 always_allow_html: true
 
 knit: (function(input_file, encoding) { output_dir = "./PDFs_outcome";

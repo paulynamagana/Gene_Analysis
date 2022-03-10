@@ -161,7 +161,11 @@ We can incorporate sample information onto the plot to try and understand the cl
 rownames(sampleInfo) <- colnames(corMatrix)
 pheatmap(corMatrix,
          annotation_col=sampleInfo)
+```
 
+
+
+```{r MDS, comment=NA, fig.height=6, fig.width=6}
 plotMDS(gse, labels=sampleInfo[,"group"],
         gene.selection="common")
 ```
