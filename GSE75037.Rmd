@@ -52,12 +52,11 @@ GSE75037, 83 lung adenocarcinomas and 83 matched adjacent non-malignant lung wer
 
 ```{r importing dataset, warning=FALSE, comment=NA, message=FALSE}
 my_id <- "GSE75037"
-gse <- getGEO(my_id)[[1]]
-```
-
-```{r inspect gse, warning=FALSE, comment=NA}
+gse <- getGEO(my_id)
+gse <- gse[[1]]
 gse
 ```
+
 
 # Exploratory analysis
 
@@ -137,11 +136,10 @@ boxplot(edata,outline=FALSE)
 Data submitted to GEO contain sample labels assigned by the experimenters, and some information about the processing protocol. All these data can be extracted by the pData function.
 
 ```{r}
-sampleInfo <- pdata
-## source_name_ch1 and characteristics_ch1.1 seem to contain factors we might need for the analysis
-sampleInfo <- select(sampleInfo, source_name_ch1,characteristics_ch1.2)
-#rename to more convenient column names
-sampleInfo <- rename(sampleInfo, patient=characteristics_ch1.2, group = source_name_ch1)
+##Let's pick just those columns that we might need for the analysis
+sampleInfo <- select(pdata, 44,"characteristics_ch1.4")
+## Optionally, rename to more convenient column names
+sampleInfo <- dplyr::rename(sampleInfo, "group" = "histology:ch1", "patient"="characteristics_ch1.4")
 ```
 
 # Sample clustering and Principal Components Analysis
@@ -198,14 +196,8 @@ In order to perform the differential analysis, we have to define the
 #and one contrast of interest.
 
 ```{r cutoff, warning=FALSE, message=FALSE}
-#calculate median expression level
-cutoff <- median(exprs(gse)) 
-#TRUE or FALSE whether each gene is "expressed" in each sample
-is_expressed <- exprs(gse) >cutoff
-## Identify genes expressed in more than 2 samples
-keep <- rowSums(is_expressed) >2
-## subset to just those expressed genes
-gse <- gse[keep,]
+contrasts <- makeContrasts(adenocarcinoma - non_malignant, levels=design)
+contrasts
 ```
 
 ## Fit the model
@@ -328,13 +320,31 @@ kable(filter(full_results, grepl("SLC22", Symbol)), booktabs=T)%>%
   kable_styling(latex_options=c("scale_down", "hold_position"))
 ```
 
+```{r}
+group=as.factor(sampleInfo$group)
+
+##### GLIMMA ########3
+#BiocManager::install("Glimma")
+library(Glimma)
+library(edgeR)
+
+cpm <- cpm(edata)
+lcpm <- cpm(edata, log=TRUE)
+
+d <-glMDPlot(tfit, coef=1, status=dt, main=colnames(tfit)[1],
+         side.main="Entrez_Gene_ID", counts=edata, groups=group, path = ".", folder = "glimma-plots", html = "GSE75037-Plot", launch=TRUE)
+
+```
+
+
 ## Export results
 
-```{r export results, warning=FALSE, message=FALSE}
+```{r export results, message=FALSE}
 library(readr)
 filter(full_results, adj.P.Val < 0.05, abs(logFC) >1) %>%
   write.csv(file ="./results/filtered_GSE75037.csv")
 ```
+
 
 ## Session Info
 

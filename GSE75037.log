@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.23 (TeX Live 2022/dev) (preloaded format=pdflatex 2022.2.25)  9 MAR 2022 21:06
+This is pdfTeX, Version 3.141592653-2.6-1.40.23 (TeX Live 2022/dev) (preloaded format=pdflatex 2022.2.25)  21 MAR 2022 20:45
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -631,7 +631,7 @@ LaTeX Font Info:    Trying to load font information for T1+lmtt on input line 1
 File: t1lmtt.fd 2015/05/01 v1.6.1 Font defs for Latin Modern
 ) [2]
 LaTeX Font Info:    Trying to load font information for TS1+lmtt on input line 
-267.
+263.
 (/Users/paulyna/Library/TinyTeX/texmf-dist/tex/latex/lm/ts1lmtt.fd
 File: ts1lmtt.fd 2015/05/01 v1.6.1 Font defs for Latin Modern
 )
@@ -646,95 +646,101 @@ es/figure-latex/boxplot-1.pdf Graphic file (type pdf)
 <use /Users/paulyna/Documents/Github/Gene Analysis/./PDFs_outcome/GSE75037_file
 s/figure-latex/boxplot-1.pdf>
 Package pdftex.def Info: /Users/paulyna/Documents/Github/Gene Analysis/./PDFs_o
-utcome/GSE75037_files/figure-latex/boxplot-1.pdf  used on input line 345.
+utcome/GSE75037_files/figure-latex/boxplot-1.pdf  used on input line 341.
 (pdftex.def)             Requested size: 371.3979pt x 183.69138pt.
 LaTeX Font Info:    Font shape `T1/lmtt/bx/n' in size <10> not available
-(Font)              Font shape `T1/lmtt/b/n' tried instead on input line 360.
+(Font)              Font shape `T1/lmtt/b/n' tried instead on input line 355.
 
 LaTeX Font Warning: Font shape `T1/lmtt/bx/it' in size <10> not available
-(Font)              Font shape `T1/lmtt/b/sl' tried instead on input line 360.
+(Font)              Font shape `T1/lmtt/b/sl' tried instead on input line 355.
+
+
+LaTeX Font Warning: Font shape `TS1/lmtt/bx/it' in size <10> not available
+(Font)              Font shape `TS1/lmtt/b/sl' tried instead on input line 355.
+
 
 [4]
 </Users/paulyna/Documents/Github/Gene Analysis/./PDFs_outcome/GSE75037_files/fi
-gure-latex/unnamed-chunk-3-1.pdf, id=138, 427.5975pt x 280.04625pt>
+gure-latex/unnamed-chunk-3-1.pdf, id=139, 427.5975pt x 280.04625pt>
 File: /Users/paulyna/Documents/Github/Gene Analysis/./PDFs_outcome/GSE75037_fil
 es/figure-latex/unnamed-chunk-3-1.pdf Graphic file (type pdf)
 <use /Users/paulyna/Documents/Github/Gene Analysis/./PDFs_outcome/GSE75037_file
 s/figure-latex/unnamed-chunk-3-1.pdf>
 Package pdftex.def Info: /Users/paulyna/Documents/Github/Gene Analysis/./PDFs_o
-utcome/GSE75037_files/figure-latex/unnamed-chunk-3-1.pdf  used on input line 38
-3.
+utcome/GSE75037_files/figure-latex/unnamed-chunk-3-1.pdf  used on input line 37
+8.
 (pdftex.def)             Requested size: 427.59645pt x 280.04555pt.
 [5pdfTeX warning (ext4): destination with the same identifier (name{figure.1}) 
 has been already used, duplicate ignored
 <argument> ...shipout:D \box_use:N \l_shipout_box 
                                                   \__shipout_drop_firstpage_...
-l.396 \end{Shaded}
+l.391 \end{Shaded}
                    </Users/paulyna/Documents/Github/Gene Analysis/./PDFs_outcom
 e/GSE75037_files/figure-latex/boxplot-1.pdf> </Users/paulyna/Documents/Github/G
 ene Analysis/./PDFs_outcome/GSE75037_files/figure-latex/unnamed-chunk-3-1.pdf>]
 </Users/paulyna/Documents/Github/Gene Analysis/./PDFs_outcome/GSE75037_files/fi
-gure-latex/unnamed-chunk-4-1.pdf, id=159, 418.56375pt x 280.04625pt>
+gure-latex/unnamed-chunk-4-1.pdf, id=160, 425.59pt x 280.04625pt>
 File: /Users/paulyna/Documents/Github/Gene Analysis/./PDFs_outcome/GSE75037_fil
 es/figure-latex/unnamed-chunk-4-1.pdf Graphic file (type pdf)
 <use /Users/paulyna/Documents/Github/Gene Analysis/./PDFs_outcome/GSE75037_file
 s/figure-latex/unnamed-chunk-4-1.pdf>
 Package pdftex.def Info: /Users/paulyna/Documents/Github/Gene Analysis/./PDFs_o
 utcome/GSE75037_files/figure-latex/unnamed-chunk-4-1.pdf  used on input line 39
-8.
-(pdftex.def)             Requested size: 418.56271pt x 280.04555pt.
+3.
+(pdftex.def)             Requested size: 425.60841pt x 280.05836pt.
 </Users/paulyna/Documents/Github/Gene Analysis/./PDFs_outcome/GSE75037_files/fi
-gure-latex/MDS-1.pdf, id=160, 404.51125pt x 360.34625pt>
+gure-latex/MDS-1.pdf, id=161, 404.51125pt x 360.34625pt>
 File: /Users/paulyna/Documents/Github/Gene Analysis/./PDFs_outcome/GSE75037_fil
 es/figure-latex/MDS-1.pdf Graphic file (type pdf)
 <use /Users/paulyna/Documents/Github/Gene Analysis/./PDFs_outcome/GSE75037_file
 s/figure-latex/MDS-1.pdf>
 Package pdftex.def Info: /Users/paulyna/Documents/Github/Gene Analysis/./PDFs_o
-utcome/GSE75037_files/figure-latex/MDS-1.pdf  used on input line 407.
+utcome/GSE75037_files/figure-latex/MDS-1.pdf  used on input line 402.
 (pdftex.def)             Requested size: 404.51025pt x 360.34537pt.
 [6 </Users/paulyna/Documents/Github/Gene Analysis/./PDFs_outcome/GSE75037_files
 /figure-latex/unnamed-chunk-4-1.pdf>]
 </Users/paulyna/Documents/Github/Gene Analysis/./PDFs_outcome/GSE75037_files/fi
-gure-latex/PCA-1.pdf, id=173, 417.56pt x 277.035pt>
+gure-latex/unnamed-chunk-5-1.pdf, id=174, 417.56pt x 277.035pt>
 File: /Users/paulyna/Documents/Github/Gene Analysis/./PDFs_outcome/GSE75037_fil
-es/figure-latex/PCA-1.pdf Graphic file (type pdf)
+es/figure-latex/unnamed-chunk-5-1.pdf Graphic file (type pdf)
 <use /Users/paulyna/Documents/Github/Gene Analysis/./PDFs_outcome/GSE75037_file
-s/figure-latex/PCA-1.pdf>
+s/figure-latex/unnamed-chunk-5-1.pdf>
 Package pdftex.def Info: /Users/paulyna/Documents/Github/Gene Analysis/./PDFs_o
-utcome/GSE75037_files/figure-latex/PCA-1.pdf  used on input line 419.
+utcome/GSE75037_files/figure-latex/unnamed-chunk-5-1.pdf  used on input line 41
+4.
 (pdftex.def)             Requested size: 417.55896pt x 277.03432pt.
 [7 </Users/paulyna/Documents/Github/Gene Analysis/./PDFs_outcome/GSE75037_files
 /figure-latex/MDS-1.pdf>] [8 </Users/paulyna/Documents/Github/Gene Analysis/./P
-DFs_outcome/GSE75037_files/figure-latex/PCA-1.pdf>] [9]
+DFs_outcome/GSE75037_files/figure-latex/unnamed-chunk-5-1.pdf>] [9]
 </Users/paulyna/Documents/Github/Gene Analysis/./PDFs_outcome/GSE75037_files/fi
-gure-latex/volcano plot-1.pdf, id=206, 423.5825pt x 279.0425pt>
+gure-latex/volcano plot-1.pdf, id=207, 423.5825pt x 279.0425pt>
 File: /Users/paulyna/Documents/Github/Gene Analysis/./PDFs_outcome/GSE75037_fil
 es/figure-latex/volcano plot-1.pdf Graphic file (type pdf)
 <use /Users/paulyna/Documents/Github/Gene Analysis/./PDFs_outcome/GSE75037_file
 s/figure-latex/volcano plot-1.pdf>
 Package pdftex.def Info: /Users/paulyna/Documents/Github/Gene Analysis/./PDFs_o
-utcome/GSE75037_files/figure-latex/volcano plot-1.pdf  used on input line 597.
+utcome/GSE75037_files/figure-latex/volcano plot-1.pdf  used on input line 593.
 (pdftex.def)             Requested size: 423.59439pt x 279.05032pt.
 [10 </Users/paulyna/Documents/Github/Gene Analysis/./PDFs_outcome/GSE75037_file
 s/figure-latex/volcano plot-1.pdf>]
 </Users/paulyna/Documents/Github/Gene Analysis/./PDFs_outcome/GSE75037_files/fi
-gure-latex/volcano_plot_pink-1.pdf, id=220, 423.5825pt x 279.0425pt>
+gure-latex/volcano_plot_pink-1.pdf, id=221, 423.5825pt x 279.0425pt>
 File: /Users/paulyna/Documents/Github/Gene Analysis/./PDFs_outcome/GSE75037_fil
 es/figure-latex/volcano_plot_pink-1.pdf Graphic file (type pdf)
 <use /Users/paulyna/Documents/Github/Gene Analysis/./PDFs_outcome/GSE75037_file
 s/figure-latex/volcano_plot_pink-1.pdf>
 Package pdftex.def Info: /Users/paulyna/Documents/Github/Gene Analysis/./PDFs_o
 utcome/GSE75037_files/figure-latex/volcano_plot_pink-1.pdf  used on input line 
-613.
+609.
 (pdftex.def)             Requested size: 423.59439pt x 279.05032pt.
 </Users/paulyna/Documents/Github/Gene Analysis/./PDFs_outcome/GSE75037_files/fi
-gure-latex/plotSA-1.pdf, id=221, 400.49625pt x 249.93375pt>
+gure-latex/plotSA-1.pdf, id=222, 400.49625pt x 249.93375pt>
 File: /Users/paulyna/Documents/Github/Gene Analysis/./PDFs_outcome/GSE75037_fil
 es/figure-latex/plotSA-1.pdf Graphic file (type pdf)
 <use /Users/paulyna/Documents/Github/Gene Analysis/./PDFs_outcome/GSE75037_file
 s/figure-latex/plotSA-1.pdf>
 Package pdftex.def Info: /Users/paulyna/Documents/Github/Gene Analysis/./PDFs_o
-utcome/GSE75037_files/figure-latex/plotSA-1.pdf  used on input line 622.
+utcome/GSE75037_files/figure-latex/plotSA-1.pdf  used on input line 618.
 (pdftex.def)             Requested size: 400.50748pt x 249.94075pt.
 [11 </Users/paulyna/Documents/Github/Gene Analysis/./PDFs_outcome/GSE75037_file
 s/figure-latex/volcano_plot_pink-1.pdf>]
@@ -747,31 +753,31 @@ LaTeX Warning: `!h' float specifier changed to `!ht'.
 [12 </Users/paulyna/Documents/Github/Gene Analysis/./PDFs_outcome/GSE75037_file
 s/figure-latex/plotSA-1.pdf>]
 </Users/paulyna/Documents/Github/Gene Analysis/./PDFs_outcome/GSE75037_files/fi
-gure-latex/unnamed-chunk-12-1.pdf, id=246, 400.49625pt x 249.93375pt>
+gure-latex/unnamed-chunk-13-1.pdf, id=247, 400.49625pt x 249.93375pt>
 File: /Users/paulyna/Documents/Github/Gene Analysis/./PDFs_outcome/GSE75037_fil
-es/figure-latex/unnamed-chunk-12-1.pdf Graphic file (type pdf)
+es/figure-latex/unnamed-chunk-13-1.pdf Graphic file (type pdf)
 <use /Users/paulyna/Documents/Github/Gene Analysis/./PDFs_outcome/GSE75037_file
-s/figure-latex/unnamed-chunk-12-1.pdf>
+s/figure-latex/unnamed-chunk-13-1.pdf>
 Package pdftex.def Info: /Users/paulyna/Documents/Github/Gene Analysis/./PDFs_o
-utcome/GSE75037_files/figure-latex/unnamed-chunk-12-1.pdf  used on input line 7
-17.
+utcome/GSE75037_files/figure-latex/unnamed-chunk-13-1.pdf  used on input line 7
+13.
 (pdftex.def)             Requested size: 400.50748pt x 249.94075pt.
 
 LaTeX Warning: `!h' float specifier changed to `!ht'.
 
 [13 </Users/paulyna/Documents/Github/Gene Analysis/./PDFs_outcome/GSE75037_file
-s/figure-latex/unnamed-chunk-12-1.pdf>] [14] [15] (./GSE75037.aux)
+s/figure-latex/unnamed-chunk-13-1.pdf>] [14] [15] [16] (./GSE75037.aux)
 Package rerunfilecheck Info: File `GSE75037.out' has not changed.
 (rerunfilecheck)             Checksum: E7C6A8F1B9DA5032685F6BEFDF9E1AE3;2781.
  ) 
 Here is how much of TeX's memory you used:
- 13091 strings out of 480236
- 210846 string characters out of 5894869
- 523563 words of memory out of 5000000
- 30719 multiletter control sequences out of 15000+600000
- 520720 words of font info for 74 fonts, out of 8000000 for 9000
+ 13095 strings out of 480236
+ 210981 string characters out of 5894869
+ 525563 words of memory out of 5000000
+ 30721 multiletter control sequences out of 15000+600000
+ 521027 words of font info for 75 fonts, out of 8000000 for 9000
  14 hyphenation exceptions out of 8191
- 60i,10n,63p,488b,470s stack positions out of 5000i,500n,10000p,200000b,80000s
+ 60i,10n,63p,491b,466s stack positions out of 5000i,500n,10000p,200000b,80000s
 {/Users/paulyna/Library/TinyTeX/texmf-dist/fonts/enc/dvips/lm/lm-ec.enc}{/Use
 rs/paulyna/Library/TinyTeX/texmf-dist/fonts/enc/dvips/lm/lm-ts1.enc}</Users/pau
 lyna/Library/TinyTeX/texmf-dist/fonts/type1/public/lm/lmbx10.pfb></Users/paulyn
@@ -783,10 +789,10 @@ eX/texmf-dist/fonts/type1/public/lm/lmri10.pfb></Users/paulyna/Library/TinyTeX/
 texmf-dist/fonts/type1/public/lm/lmtko10.pfb></Users/paulyna/Library/TinyTeX/te
 xmf-dist/fonts/type1/public/lm/lmtt10.pfb></Users/paulyna/Library/TinyTeX/texmf
 -dist/fonts/type1/public/lm/lmtti10.pfb>
-Output written on GSE75037.pdf (15 pages, 7519891 bytes).
+Output written on GSE75037.pdf (16 pages, 7832404 bytes).
 PDF statistics:
- 330 PDF objects out of 1000 (max. 8388607)
- 264 compressed objects within 3 object streams
- 58 named destinations out of 1000 (max. 500000)
+ 337 PDF objects out of 1000 (max. 8388607)
+ 269 compressed objects within 3 object streams
+ 59 named destinations out of 1000 (max. 500000)
  198 words of extra memory for PDF output out of 10000 (max. 10000000)
 
