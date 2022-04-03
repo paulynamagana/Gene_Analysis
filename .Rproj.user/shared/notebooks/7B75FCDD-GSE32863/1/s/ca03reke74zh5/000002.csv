@@ -1,0 +1,2 @@
+"0","kable(table(pdata[43]), booktabs=T)%>%"
+"0","  kable_styling(latex_options= ""hold_position"")"

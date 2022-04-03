@@ -1,0 +1,2 @@
+"0","# is.na checks for NA values"
+"0","kable(table(is.na(pdata$characteristics_ch1)))"

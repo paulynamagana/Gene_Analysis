@@ -1,0 +1,2 @@
+"0","results <- (decideTests(efit))"
+"0","kable(summary(results))"

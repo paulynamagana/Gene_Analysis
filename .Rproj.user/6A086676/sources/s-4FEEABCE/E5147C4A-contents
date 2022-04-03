@@ -1,0 +1,215 @@
+---
+title: "Protein Expression from Atlas"
+author: "Paulyna Magana"
+date: '`r format(Sys.time(), "Last modified: %d %b %Y")`'
+output:
+  rmarkdown::html_document:
+    toc: true
+    toc_float:
+      collapsed: false
+
+knit: (function(input_file, encoding) { output_dir = "..";
+  rmarkdown::render(input_file,
+ encoding=encoding,
+ output_file=file.path(dirname(input_file), output_dir, 'expressionfromatlas.html'))})
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Gene Expression
+
+## Dependencies
+```{r, message=FALSE}
+library(httr)
+library(jsonlite)
+library(dplyr)
+library(tidyverse)
+library(purrr)
+library(ggplot2)
+library(rmarkdown)
+```
+
+
+## Import data
+
+```{r, message=FALSE}
+
+SLC22A4url <- "https://www.proteinatlas.org/ENSG00000197208.json"
+SLC22A4_json <- jsonlite::fromJSON(SLC22A4url, "text")
+```
+
+## Arrange data
+
+```{r}
+
+SLC22A4RAW <- SLC22A4_json[144:212]
+
+SLC22A4RAW <- as.data.frame(SLC22A4RAW) %>% 
+  tibble::rownames_to_column( "cell")
+
+SLC22A4RAW <- t(SLC22A4RAW)
+SLC22A4RAW<- as.data.frame(SLC22A4RAW)
+
+SLC22A4RAW$cells <- row.names(SLC22A4RAW)
+```
+
+
+## Separate the cell lines from string
+
+```{r, message=FALSE}
+SLC22A4 <- data.frame(do.call('rbind',strsplit(as.character(SLC22A4RAW$cells),"...",fixed=TRUE)))
+SLC22A4 <- data.frame(do.call('rbind', strsplit(as.character(SLC22A4$X2),"..",fixed=TRUE)))
+
+# extract the name
+SLC22A4RAW$cell_line <- SLC22A4$X1
+# select columns
+SLC22A4 <- select(SLC22A4RAW, -cells)
+# take a look at the data
+str(SLC22A4)
+```
+
+
+
+
+```{r, message=FALSE}
+SLC22A4$V1 <- as.numeric(SLC22A4$V1)
+
+# get rid of first row
+SLC22A4<- SLC22A4[-1,]
+
+# add column to differentiate transporter
+SLC22A4$transporter <- "SLC22A4"
+
+# change name
+colnames(SLC22A4)[1] <- "NX"
+rownames(SLC22A4) <- NULL
+ 
+```
+
+```{r, message=FALSE}
+ggplot(SLC22A4, aes(cell_line, NX))+
+  geom_point()
+```
+
+## Same for SLC22A1
+
+```{r, message=FALSE}
+
+SLC22A1url <- "https://www.proteinatlas.org/ENSG00000175003.json"
+SLC22A1_json <- jsonlite::fromJSON(SLC22A1url, "text")
+
+#extract rows from json
+SLC22A1RAW <- SLC22A1_json[144:212]
+
+SLC22A1RAW <- as.data.frame(SLC22A1RAW) %>% 
+  tibble::rownames_to_column( "cell")
+
+# transpose
+SLC22A1RAW <- t(SLC22A1RAW)
+SLC22A1RAW<- as.data.frame(SLC22A1RAW)
+
+SLC22A1RAW$cells <- row.names(SLC22A1RAW)
+
+## Separate the cell lines from string
+
+SLC22A1 <- data.frame(do.call('rbind',strsplit(as.character(SLC22A1RAW$cells),"...",fixed=TRUE)))
+SLC22A1 <- data.frame(do.call('rbind', strsplit(as.character(SLC22A1$X2),"..",fixed=TRUE)))
+
+# extract the name
+SLC22A1RAW$cell_line <- SLC22A1$X1
+# select columns
+SLC22A1 <- select(SLC22A1RAW, -cells)
+# take a look at the data
+str(SLC22A1)
+
+
+SLC22A1$V1 <- as.numeric(SLC22A1$V1)
+
+# get rid of first row
+SLC22A1<- SLC22A1[-1,]
+
+# add column to differentiate transporter
+SLC22A1$transporter <- "SLC22A1"
+
+# change name
+colnames(SLC22A1)[1] <- "NX"
+rownames(SLC22A1) <- NULL
+ 
+```
+
+## now for SLC22A5
+
+```{r, message=FALSE}
+
+SLC22A5url <- "https://www.proteinatlas.org/ENSG00000197375.json"
+SLC22A5_json <- jsonlite::fromJSON(SLC22A5url, "text")
+
+#extract rows from json
+SLC22A5RAW <- SLC22A5_json[144:212]
+
+SLC22A5RAW <- as.data.frame(SLC22A5RAW) %>% 
+  tibble::rownames_to_column( "cell")
+
+# transpose
+SLC22A5RAW <- t(SLC22A5RAW)
+SLC22A5RAW<- as.data.frame(SLC22A5RAW)
+
+SLC22A5RAW$cells <- row.names(SLC22A5RAW)
+
+## Separate the cell lines from string
+
+SLC22A5 <- data.frame(do.call('rbind',strsplit(as.character(SLC22A5RAW$cells),"...",fixed=TRUE)))
+SLC22A5 <- data.frame(do.call('rbind', strsplit(as.character(SLC22A5$X2),"..",fixed=TRUE)))
+
+# extract the name
+SLC22A5RAW$cell_line <- SLC22A5$X1
+# select columns
+SLC22A5 <- select(SLC22A5RAW, -cells)
+# take a look at the data
+str(SLC22A5)
+
+
+SLC22A5$V1 <- as.numeric(SLC22A5$V1)
+
+# get rid of first row
+SLC22A5<- SLC22A5[-1,]
+
+# add column to differentiate transporter
+SLC22A5$transporter <- "SLC22A5"
+
+# change name
+colnames(SLC22A5)[1] <- "NX"
+rownames(SLC22A5) <- NULL
+ 
+```
+
+
+
+```{r, message=FALSE}
+transporters <- rbind(SLC22A1, SLC22A4, SLC22A5)
+```
+
+
+
+```{r, message=FALSE, fig.dim = c(8, 12)}
+gtrans <- ggplot(transporters, aes(transporter, cell_line, fill= NX)) + 
+  geom_tile() +
+  scale_fill_gradient(low="#C7D59F", high="#4E6E58") +
+  theme(strip.placement = "outside",
+        plot.title = element_text(hjust = 0.5)) +
+  labs(title = "SLC22 expression in Cell Lines", caption= "Taken from The Human Protein Atlas") +
+  ylab("Cell Line") +
+  xlab("Transporter") +
+  scale_y_discrete(limits = rev(levels(as.factor(transporters$cell_line)))) +
+  theme_classic()
+print(gtrans)
+```
+
+```{r}
+sessionInfo()
+```
+
+
+

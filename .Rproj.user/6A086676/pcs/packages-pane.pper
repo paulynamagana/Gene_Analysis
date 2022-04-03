@@ -1,0 +1,7 @@
+{
+    "installOptions": {
+        "installFromRepository": true,
+        "libraryPath": "/Users/paulyna/Documents/Github/Gene Analysis/renv/library/R-4.0/x86_64-apple-darwin17.0",
+        "installDependencies": true
+    }
+}

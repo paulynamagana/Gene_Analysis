@@ -1,0 +1,5 @@
+"0","##Let's pick just those columns that we might need for the analysis"
+"0","sampleInfo <- select(pdata, 44,""characteristics_ch1.4"")"
+"0","## Optionally, rename to more convenient column names"
+"0","sampleInfo <- dplyr::rename(sampleInfo, ""group"" = ""histology:ch1"", ""patient""=""characteristics_ch1.4"")"
+"0","paged_table(sampleInfo)"

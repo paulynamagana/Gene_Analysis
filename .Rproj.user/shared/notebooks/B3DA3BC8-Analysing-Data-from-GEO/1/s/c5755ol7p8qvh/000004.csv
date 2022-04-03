@@ -1,0 +1,7 @@
+"0",""
+"0","#Plot principal components labeled by group"
+"0","pca <- prcomp(t(edata))"
+"0","## Join the PCs to the sample information"
+"0","cbind(sampleInfo, pca$x) %>% "
+"0","ggplot(aes(x = PC1, y=PC2, col=group,label=paste(""Patient"", patient))) + geom_point() + geom_text_repel()"
+"0",""

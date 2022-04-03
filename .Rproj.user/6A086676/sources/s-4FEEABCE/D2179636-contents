@@ -1,0 +1,18 @@
+library(readr)
+library(dplyr)
+library(tidyr)
+
+#load data
+SLC <- read.csv("SLC22A1_SNP.csv")
+
+#This will split column fxn into 5 coumns, empty spaces will be filled with NA
+fxnsep <- separate(SLC, FXN_CLASS, into = c("fxn_class1", "fxn_class2", "fxn_class3", "fxn_class4", "fxn_class5") ,sep = "\\,", remove = TRUE)
+
+fxnval <- separate(fxnsep, VALIDATED, into = c("validated1", "validated2", "validated3") ,sep = "\\,", remove = TRUE)
+
+#sort data by clinical significance
+data <- select(fxnval, -ALLELE_ORIGIN, -GLOBAL_POPULATION, -GLOBAL_SAMPLESIZE, -SUSPECTED, -CITED_SORT)
+
+#filter by clinical significance
+filter_clin <- filter(data, CLINICAL_SIGNIFICANCE == "benign") %>%
+head()

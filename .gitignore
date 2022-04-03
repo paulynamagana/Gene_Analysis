@@ -1,7 +1,10 @@
-.Rproj.user
+.Rproj
 .Rhistory
 .RData
 .Ruserdata
 .gz
+.gct.gz
+.bgx.gz
+.tar
 *.log
 renv/**

@@ -1,0 +1,18 @@
+library(flowCore)
+library(ggcyto)
+library(tidyverse)
+library(knitr)
+
+fcsfile <- "Sample_107.fcs"
+fs <- read.FCS(fcsfile, transformation = FALSE)
+
+colnames(fs)
+
+
+ggcyto(fs ,aes(x=FSC1-Width,y=FSC1-Height),subset="root")+
+  geom_hex(bins = 200)+geom_gate(g.singlets)+ggcyto_par_set(limits = "instrument") # check gate
+
+
+
+
+autoplot(fs)

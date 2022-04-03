@@ -1,0 +1,1 @@
+dat.gct <- read.delim(file="gene_tpm_2017-06-05_v8_adipose_subcutaneous.gct.gz", skip=2)

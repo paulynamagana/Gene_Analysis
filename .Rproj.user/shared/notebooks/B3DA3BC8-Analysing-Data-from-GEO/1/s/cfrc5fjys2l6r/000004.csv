@@ -1,0 +1,4 @@
+"0",""
+"0","anno <- select(anno,Symbol, Entrez_Gene_ID,Chromosome,Cytoband)"
+"0","efit$genes <- anno"
+"0","topTable(efit)"

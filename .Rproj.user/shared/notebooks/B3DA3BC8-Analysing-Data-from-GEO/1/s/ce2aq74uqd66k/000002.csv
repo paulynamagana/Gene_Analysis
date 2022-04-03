@@ -1,0 +1,3 @@
+"0","pdata= pData(gse) #sample information"
+"0","edata= exprs(gse) #expression data"
+"0","fdata = fData(gse) #gene annotation"
