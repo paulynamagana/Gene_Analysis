@@ -1,3 +1,0 @@
-"0","# Use option useNA to include NA's in table"
-"0","kable(table(pdata$characteristics_ch1,useNA=""ifany""), booktabs=TRUE) %>%"
-"0","  kable_styling(latex_options = ""hold_position"")"
