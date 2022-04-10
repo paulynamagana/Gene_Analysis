@@ -2,9 +2,14 @@
 .Rhistory
 .RData
 .Ruserdata
-.gz
+*.gz
 .gct.gz
+*.bgx.gz
+*.tar
+*.log
 .bgx.gz
 .tar
 *.log
 PDFs_outcome/**
+*.txt
+*.DS_Store

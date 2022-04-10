@@ -1,5 +1,5 @@
 
-#download raw file
+####download raw file
 #url <- "https://www.ncbi.nlm.nih.gov/geo/download/?acc=GSE32863&format=file"
 #utils::download.file(url, destfile="GSE32863/GSE32863_RAW.tar", mode="wb") 
 
@@ -8,14 +8,198 @@
 #bgx <- readBGX(file.path("./GSE32863/GPL6884_HumanWG-6_V3_0_R0_11282955_A.bgx.gz")) #read file
 
 
-
+########
 library(GEOquery)
 library(edgeR)
 my_id <- "GSE32863"
+
+##expression supp File
 gse <- getGEOSuppFiles(my_id)
+
+## extract geo expression, fData, eData
+#Sys.setenv(VROOM_CONNECTION_SIZE = 25600000)
+expr <- getGEO(my_id)[[1]]
+
+sampleInfo <- pData(expr)
+edata <- exprs(expr) #to compare the edata matrix to the raw data that I'll obtain later
+fdata <- fData(expr)
+
+
+#################
 
 library(readr)
 library(dplyr)
+
+####read in the data and convert to an ElistRaw object
+x <- read.table('./GSE32863/GSE32863_non-normalized.txt.gz',
+  header = TRUE, sep = '\t', stringsAsFactors = FALSE, skip = 0)
+
+#extract detection p-value columns
+detectionpvalues <- x[,grep('Detection.Pval', colnames(x))]
+x <- x[,-grep('Detection.Pval', colnames(x))]
+
+# set rownames and tidy up final expression matrix
+probes <- x$ID_REF
+x <- data.matrix(x[,2:ncol(x)])
+rownames(x) <- probes
+colnames(x) <- sampleInfo$geo_accession
+
+
+# read in annotation and align it with the expression data
+anno <- fdata
+
+# create a custom EListRaw object
+project <- new('EListRaw')
+project@.Data[[1]] <- 'illumina'
+project@.Data[[2]] <- sampleInfo
+project@.Data[[3]] <- NULL
+project@.Data[[4]] <- x
+project@.Data[[5]] <- NULL
+project$E <- x
+project$targets <- sampleInfo
+project$genes <- NULL
+project$other$Detection <- detectionpvalues
+
+
+# for BeadArrays, background correction and normalisation are handled by a single function: neqc()
+# this is the same as per Agilent single colour arrays
+#
+# perform background correction on the fluorescent intensities
+#   'normexp' is beneficial in that it doesn't result in negative values, meaning no data is lost
+#   for ideal offset, see Gordon Smyth's answer, here: https://stat.ethz.ch/pipermail/bioconductor/2006-April/012554.html
+# normalize the data with the 'quantile' method, to be consistent with RMA for Affymetrix arrays
+project.bgcorrect.norm <- neqc(project, offset = 16)
+
+# filter out control probes, those with no symbol, and those that failed
+annot <- fdata[which(fdata$ID %in% rownames(project.bgcorrect.norm)),]
+project.bgcorrect.norm <- project.bgcorrect.norm[which(rownames(project.bgcorrect.norm) %in% fdata$ID),]
+annot <- annot[match(rownames(project.bgcorrect.norm), annot$ID),]
+project.bgcorrect.norm@.Data[[3]] <- annot
+project.bgcorrect.norm$genes <- annot
+Control <- project.bgcorrect.norm$genes$Source=="ILMN_Controls"
+NoSymbol <- project.bgcorrect.norm$genes$Symbol == ""
+isexpr <- rowSums(project.bgcorrect.norm$other$Detection <= 0.05) >= 3
+project.bgcorrect.norm.filt <- project.bgcorrect.norm[!Control & !NoSymbol & isexpr, ]
+dim(project.bgcorrect.norm)
+dim(project.bgcorrect.norm.filt)
+
+
+
+# summarise across genes by mean
+# ID is used to identify the replicates
+project.bgcorrect.norm.filt.mean <- avereps(project.bgcorrect.norm.filt,
+                                            ID = project.bgcorrect.norm.filt$genes$Symbol)
+dim(project.bgcorrect.norm.filt.mean)
+
+
+library(limma)
+
+design<- model.matrix(~0 + sampleInfo$source_name_ch1)  
+design
+
+## the column names are a bit ugly, so we will rename
+colnames(design) <- c("Non_tumor","Adenocarcinoma")
+
+#fit the model to the data
+#The result of which is to estimate the expression level in each of the groups that we specified.
+fit <- lmFit(project.bgcorrect.norm.filt.mean$E, design)
+head(fit$coefficients)
+
+#In order to perform the differential analysis, we have to define the contrast that we are interested in
+#In our case we only have two groups and one contrast of interest.
+#Multiple contrasts can be defined in the makeContrasts function.
+contrasts<-makeContrasts(Non_tumor-Adenocarcinoma,levels = design)
+fit2 <- contrasts.fit(fit, contrasts)
+
+#apply the empirical Bayes’ step to get our differential expression statistics and p-values.
+fit2 <- eBayes(fit2)
+topTable(fit2)
+
+
+### to see the results of the second contrast (if it exists)
+## topTable(fit2, coef=2)
+
+#If we want to know how many genes are differentially-expressed overall
+#we can use the decideTests function.
+decideTests(fit2)
+table(decideTests(fit2))
+
+####Coping with outliers
+###A compromise, which has been shown to work well is to calculate weights to define the reliability of each sample.
+## calculate relative array weights
+aw <- arrayWeights(x,design)
+aw
+
+#The lmFit function can accept weights, and the rest of the code proceeds as above.
+fit <- lmFit(project.bgcorrect.norm.filt.mean$E, design,
+             weights = aw)
+contrasts <- makeContrasts(Non_tumor-Adenocarcinoma,levels = design)
+fit2 <- contrasts.fit(fit, contrasts)
+fit2 <- eBayes(fit2)
+
+##Further processing and visualisation of DE results
+anno <- select(anno,Symbol,Entrez_Gene_ID,Chromosome,Cytoband)
+fit2$genes <- anno
+topTable(fit2)
+
+full_results <- topTable(fit2, number=Inf)
+full_results <- tibble::rownames_to_column(full_results,"ID")
+
+## Make sure you have ggplot2 loaded
+library(ggplot2)
+ggplot(full_results,aes(x = logFC, y=B)) + geom_point()
+
+## change according to your needs
+p_cutoff <- 0.05
+fc_cutoff <- 1
+
+full_results %>% 
+  mutate(Significant = adj.P.Val < p_cutoff, abs(logFC) > fc_cutoff ) %>% 
+  ggplot(aes(x = logFC, y = B, col=Significant)) + geom_point()
+
+
+
+library(ggrepel)
+p_cutoff <- 0.05
+fc_cutoff <- 1
+topN <- 20
+
+full_results %>% 
+  mutate(Significant = adj.P.Val < p_cutoff, abs(logFC) > fc_cutoff ) %>% 
+  mutate(Rank = 1:n(), Label = ifelse(Rank < topN, Symbol,"")) %>% 
+  ggplot(aes(x = logFC, y = B, col=Significant,label=Label)) + geom_point() + geom_text_repel(col="black")
+
+
+## Get the results for particular gene of interest
+filter(full_results, Symbol == "SLC22")
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+########################
 samples <- read.delim("./GSE32863/GSE32863_non-normalized.txt", stringsAsFactors = TRUE, row.names = 1)
 
 #Sys.setenv(VROOM_CONNECTION_SIZE = 25600000)
