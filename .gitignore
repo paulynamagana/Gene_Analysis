@@ -7,8 +7,4 @@
 .bgx.gz
 .tar
 *.log
-renv/**
-.Rproj.user
-.Rprofile
-.lock
-.log
+PDFs_outcome/**

@@ -1,2 +1,0 @@
-"0","# Use option useNA to include NA's in table"
-"0","kable(table(pdata$characteristics_ch1,useNA=""ifany""))"

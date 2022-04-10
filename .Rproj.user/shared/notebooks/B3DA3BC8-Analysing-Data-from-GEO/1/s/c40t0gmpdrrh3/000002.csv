@@ -1,5 +1,0 @@
-"0","library(htmlwidgets)"
-"0","htmlwidgets::saveWidget(d, ""glimma-plot.html"", selfcontained = T)"
-"2","Error in .getNamespace(pkg) : 
-  invalid type/length (symbol/0) in vector allocation
-"

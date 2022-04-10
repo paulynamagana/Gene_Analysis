@@ -1,6 +1,0 @@
-"0","# Check genomic data for NAs"
-"0","sum(is.na(edata))"
-"1","[1]"
-"1"," 0"
-"1","
-"

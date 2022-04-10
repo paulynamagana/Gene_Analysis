@@ -1,5 +1,0 @@
-"0","anno <- fData(gse)"
-"0","anno <- select(anno,Symbol, Entrez_Gene_ID,Chromosome,Cytoband)"
-"0","efit$genes <- anno"
-"0","kable(topTable(efit), booktabs=T)%>%"
-"0","  kable_styling(latex_options= c(""scale_down"", ""hold_position""))"

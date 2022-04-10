@@ -1,2 +1,0 @@
-"0","## exprs get the expression levels as a data frame and get the distribution"
-"0","kable(summary(exprs(gse)))"

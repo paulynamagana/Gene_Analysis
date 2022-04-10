@@ -1,3 +1,0 @@
-"0","# Make the distribution of NA's by genes"
-"0","gene_na = rowSums(is.na(edata))"
-"0","kable(head(gene_na))"

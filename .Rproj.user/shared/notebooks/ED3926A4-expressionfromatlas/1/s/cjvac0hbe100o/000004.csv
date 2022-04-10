@@ -1,3 +1,0 @@
-"0",""
-"0","SLC22A4url <- ""https://www.proteinatlas.org/ENSG00000197208.json"""
-"0","SLC22A4_json <- jsonlite::fromJSON(SLC22A4url, ""text"")"
