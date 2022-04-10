@@ -9,3 +9,6 @@
 *.log
 renv/**
 .Rproj.user
+.Rprofile
+.lock
+.log
