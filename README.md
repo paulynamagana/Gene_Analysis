@@ -1,2 +1,2 @@
-# Gene_Analysis
+# Expression Analysis
 Analysis of data from GEO
