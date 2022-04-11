@@ -1,14 +1,22 @@
+#https://www.biostars.org/p/473877/#474950
+#https://www.biostars.org/p/424944/
+#https://www.biostars.org/p/403439/#403446
+  
+
 
 ####download raw file
 #url <- "https://www.ncbi.nlm.nih.gov/geo/download/?acc=GSE32863&format=file"
+#dir.create("GSE32863")
 #utils::download.file(url, destfile="GSE32863/GSE32863_RAW.tar", mode="wb") 
 
+#BiocManager::install("illuminaio")
 #library(illuminaio)
 #utils::untar("./GSE32863/GSE32863_RAW.tar", exdir = "./GSE32863")  #untar
 #bgx <- readBGX(file.path("./GSE32863/GPL6884_HumanWG-6_V3_0_R0_11282955_A.bgx.gz")) #read file
 
 
 ########
+readr::local_edition(1) #some problem with geoquery, run this before getGEO
 library(GEOquery)
 library(edgeR)
 my_id <- "GSE32863"
@@ -17,12 +25,13 @@ my_id <- "GSE32863"
 gse <- getGEOSuppFiles(my_id)
 
 ## extract geo expression, fData, eData
-#Sys.setenv(VROOM_CONNECTION_SIZE = 25600000)
+Sys.setenv(VROOM_CONNECTION_SIZE = 256000000)
 expr <- getGEO(my_id)[[1]]
 
 sampleInfo <- pData(expr)
 edata <- exprs(expr) #to compare the edata matrix to the raw data that I'll obtain later
 fdata <- fData(expr)
+
 
 
 #################
@@ -43,6 +52,12 @@ probes <- x$ID_REF
 x <- data.matrix(x[,2:ncol(x)])
 rownames(x) <- probes
 colnames(x) <- sampleInfo$geo_accession
+
+
+##check normalisation and scales
+summary(edata)
+summary(x)
+summary(project.bgcorrect.norm.filt.mean$E)
 
 
 # read in annotation and align it with the expression data
@@ -71,7 +86,7 @@ project$other$Detection <- detectionpvalues
 project.bgcorrect.norm <- neqc(project, offset = 16)
 
 # filter out control probes, those with no symbol, and those that failed
-annot <- fdata[which(fdata$ID %in% rownames(project.bgcorrect.norm)),]
+annot <- anno[which(anno$ID %in% rownames(project.bgcorrect.norm)),]
 project.bgcorrect.norm <- project.bgcorrect.norm[which(rownames(project.bgcorrect.norm) %in% fdata$ID),]
 annot <- annot[match(rownames(project.bgcorrect.norm), annot$ID),]
 project.bgcorrect.norm@.Data[[3]] <- annot
@@ -92,9 +107,55 @@ project.bgcorrect.norm.filt.mean <- avereps(project.bgcorrect.norm.filt,
 dim(project.bgcorrect.norm.filt.mean)
 
 
+############
+##check normalisation and scales
+summary(edata)
+summary(x)
+summary(project.bgcorrect.norm.filt.mean$E)
+
+
+boxplot(exprs(expr),outline=FALSE)
+boxplot(x,outline=FALSE)
+boxplot(project.bgcorrect.norm.filt.mean$E,outline=FALSE)
+
+
+corMatrix <- cor(project.bgcorrect.norm.filt.mean$E,use="c")
+pheatmap(corMatrix)     
+
+## Print the rownames of the sample information and check it matches the correlation matrix
+rownames(sampleInfo)
+colnames(corMatrix)
+
+pheatmap(corMatrix,
+         annotation_col = sampleInfo$characteristics_ch1)
+
+
+
+library(ggplot2)
+library(ggrepel)
+## MAKE SURE TO TRANSPOSE THE EXPRESSION MATRIX
+
+pca <- prcomp(t(project.bgcorrect.norm.filt.mean$E))
+
+## Join the PCs to the sample information
+cbind(sampleInfo, pca$x) %>% 
+  ggplot(aes(x = PC1, y=PC2, col=characteristics_ch1,label=paste("Patient", characteristics_ch1.1))) + geom_point() + geom_text_repel()
+
+
+
+
+
+
+
+
+################
+
+
+
+###########################
 library(limma)
 
-design<- model.matrix(~0 + sampleInfo$source_name_ch1)  
+design<- model.matrix(~0 +sampleInfo$source_name_ch1)  
 design
 
 ## the column names are a bit ugly, so we will rename
@@ -103,28 +164,27 @@ colnames(design) <- c("Non_tumor","Adenocarcinoma")
 #fit the model to the data
 #The result of which is to estimate the expression level in each of the groups that we specified.
 fit <- lmFit(project.bgcorrect.norm.filt.mean$E, design)
+fit
 head(fit$coefficients)
+
 
 #In order to perform the differential analysis, we have to define the contrast that we are interested in
 #In our case we only have two groups and one contrast of interest.
 #Multiple contrasts can be defined in the makeContrasts function.
-contrasts<-makeContrasts(Non_tumor-Adenocarcinoma,levels = design)
+contrasts<-makeContrasts(Adenocarcinoma-Non_tumor,levels = design)
 fit2 <- contrasts.fit(fit, contrasts)
 
-#apply the empirical Bayes’ step to get our differential expression statistics and p-values.
+#apply the empirical Bayes step to get our differential expression statistics and p-values.
 fit2 <- eBayes(fit2)
 topTable(fit2)
 
 
-### to see the results of the second contrast (if it exists)
-## topTable(fit2, coef=2)
-
 #If we want to know how many genes are differentially-expressed overall
 #we can use the decideTests function.
-decideTests(fit2)
-table(decideTests(fit2))
+summary(decideTests(fit2))
 
-####Coping with outliers
+
+#########################Coping with outliers
 ###A compromise, which has been shown to work well is to calculate weights to define the reliability of each sample.
 ## calculate relative array weights
 aw <- arrayWeights(x,design)
@@ -137,10 +197,14 @@ contrasts <- makeContrasts(Non_tumor-Adenocarcinoma,levels = design)
 fit2 <- contrasts.fit(fit, contrasts)
 fit2 <- eBayes(fit2)
 
+
+
+##################################
+
 ##Further processing and visualisation of DE results
-anno <- select(anno,Symbol,Entrez_Gene_ID,Chromosome,Cytoband)
-fit2$genes <- anno
 topTable(fit2)
+
+
 
 full_results <- topTable(fit2, number=Inf)
 full_results <- tibble::rownames_to_column(full_results,"ID")
@@ -166,12 +230,35 @@ topN <- 20
 
 full_results %>% 
   mutate(Significant = adj.P.Val < p_cutoff, abs(logFC) > fc_cutoff ) %>% 
-  mutate(Rank = 1:n(), Label = ifelse(Rank < topN, Symbol,"")) %>% 
+  mutate(Rank = 1:n(), Label = ifelse(Rank < topN, ID,"")) %>% 
   ggplot(aes(x = logFC, y = B, col=Significant,label=Label)) + geom_point() + geom_text_repel(col="black")
 
 
 ## Get the results for particular gene of interest
-filter(full_results, Symbol == "SLC22")
+filter(full_results, ID == "SLC22A1")
+filter(full_results, ID == "SLC22A4")
+filter(full_results, ID == "SLC22A5")
+
+
+## Get results for genes with SLC22 in the name
+filter(full_results, grepl("SLC22", ID))
+
+
+##save csv
+library(readr)
+write.csv(full_results, "./GSE32863/GSE32863_normalised.csv")
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
