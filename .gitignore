@@ -10,7 +10,8 @@
 *.bgx.gz
 *.tar
 *.log
-PDFs_outcome/**
 *.txt
 *.DS_Store
 *.RData
+*.idat
+*.bgx
