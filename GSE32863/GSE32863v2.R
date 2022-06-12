@@ -88,11 +88,54 @@ project.bgcorrect.norm.filt.mean <- avereps(project.bgcorrect.norm.filt,
                                             ID = project.bgcorrect.norm.filt$genes$Symbol)
 
 #MDS plot
-plotMDS(project.bgcorrect.norm.filt.mean, labels=project.bgcorrect.norm.mean$targets$source_name_ch1)
+plotMDS(project.bgcorrect.norm.filt.mean, labels=project.bgcorrect.norm.filt.mean$targets$source_name_ch1)
 
-ct <- factor(sampleInfo$source_name_ch1)
-design<- model.matrix(~0 + ct)
-colnames(design) <- c("adjacent_non_tumor", "adenocarcinoma") #rename columns
+####################################################
+
+#check they match
+rownames(sampleInfo)
+colnames(corMatrix)
+
+library(pheatmap)
+corMatrix <- cor(project.bgcorrect.norm.filt.mean$E, use = "c")
+pheatmap(corMatrix)
+
+
+##ADDED 12 JUN
+library(limma)
+
+design<- model.matrix(~0 +sampleInfo$source_name_ch1)  
+design
+## the column names are a bit ugly, so we will rename
+colnames(design) <- c("Non_tumor","Adenocarcinoma")
+
+summary(project.bgcorrect.norm.filt.mean$E)
+#calculate cutoff
+cutoff <- median(project.bgcorrect.norm.filt.mean$E)
+
+is_expressed <- project.bgcorrect.norm.filt.mean$E > cutoff
+keep <- rowSums(is_expressed) > 2
+table(keep)
+
+project.bgcorrect.norm.filt.mean$E <- project.bgcorrect.norm.filt.mean$E[keep,]
+
+#fit the model to the data
+#The result of which is to estimate the expression level in each of the groups that we specified.
+fit <- lmFit(project.bgcorrect.norm.filt.mean$E, design)
+fit
+head(fit$coefficients)
+
+contrasts<-makeContrasts(Adenocarcinoma-Non_tumor,levels = design)
+fit2 <- contrasts.fit(fit, contrasts)
+#apply the empirical Bayes step to get our differential expression statistics and p-values.
+fit2 <- eBayes(fit2)
+topTable(fit2)
+
+decideTests(fit2)
+table(decideTests(fit2))
+
+###########################################
+### run this after the code added on Jun 12th
 
 fit <- lmFit(project.bgcorrect.norm.filt.mean$E, design)
 
@@ -124,10 +167,5 @@ head(adeno_vs_non)
 
 plotMD(tfit, column=1, status=dt[,1], main=colnames(tfit)[1], 
        xlim=c(2,16))
-
-
-############################################
-
-
 
 
