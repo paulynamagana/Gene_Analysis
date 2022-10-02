@@ -1,7 +1,16 @@
 *.Rproj
 *.Rhistory
 *.RData
+<<<<<<< Updated upstream
 *.Ruserdata
+=======
+<<<<<<< HEAD
+*.Rprofile
+.Ruserdata
+=======
+*.Ruserdata
+>>>>>>> d73492bae53912d2393efbcc1a0fd38826eedc3f
+>>>>>>> Stashed changes
 *.gz
 *.gct.gz
 *.bgx.gz
