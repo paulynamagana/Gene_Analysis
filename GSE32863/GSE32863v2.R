@@ -1,4 +1,4 @@
-library(readr)
+readr::local_edition(1)
 library(dplyr)
 library(limma)
 library(edgeR)
@@ -18,7 +18,7 @@ annot <- fData(expr) #annotation data
 baseDir <- 'GSE32863/'
 
 #import data
-x <- read.table(paste0(baseDir, '/GSE32863_non-normalized.txt.gz'),
+x <- read.table(paste0(baseDir, 'GSE32863_non-normalized.txt.gz'),
                 header = TRUE, sep = '\t', stringsAsFactors = FALSE, skip = 0)
 x <- x[order(x$ID_REF),] 
 
@@ -39,6 +39,7 @@ x <- data.matrix(x[,2:ncol(x)])
 rownames(x) <- probes
 colnames(x) <- colnames(edata)
 colnames(detectionpvalues) <- colnames(x)
+
 #verify rownames in x match those in annot
 #dataframes should have same number of observations and rows
 annot <- annot[which(annot$ID %in% rownames(x)),]
@@ -53,8 +54,7 @@ project@.Data[[4]] <- x
 project@.Data[[5]] <- NULL
 project$E <- x
 project$targets <- sampleInfo
-#project$genes <- annot
-project$genes <- NULL
+project$genes <- annot
 project$E <- x
 project$other$Detection <- detectionpvalues
 
@@ -100,11 +100,14 @@ library(pheatmap)
 corMatrix <- cor(project.bgcorrect.norm.filt.mean$E, use = "c")
 pheatmap(corMatrix)
 
+#check they match
+rownames(sampleInfo)
+colnames(corMatrix)
 
 ##ADDED 12 JUN
 library(limma)
 
-design<- model.matrix(~0 +sampleInfo$source_name_ch1)  
+design<- model.matrix(~sampleInfo$source_name_ch1+ 0)  
 design
 ## the column names are a bit ugly, so we will rename
 colnames(design) <- c("Non_tumor","Adenocarcinoma")
@@ -139,11 +142,11 @@ table(decideTests(fit2))
 
 fit <- lmFit(project.bgcorrect.norm.filt.mean$E, design)
 
-contrasts <- makeContrasts(adenocarcinoma - adjacent_non_tumor, levels=design)
+contrasts <- makeContrasts(Adenocarcinoma - Non_tumor, levels=design)
 contrasts
 
 fit2 <- contrasts.fit(fit, contrasts)
-efit <- eBayes(fit2)
+efit <- eBayes(fit2, trend= TRUE)
 summary(decideTests(fit2, method="global"))
 topTable(efit, coef=1)
 
@@ -157,6 +160,8 @@ ggplot(full_results, aes(x=logFC, y=B)) +
 ####SA
 plotSA(efit, main="Final model: Mean-variance trend")
 
+
+############## last bits
 
 tfit <- treat(efit, lfc=1)
 dt <- decideTests(tfit)
