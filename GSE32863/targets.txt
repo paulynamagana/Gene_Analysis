@@ -1,0 +1,117 @@
+IDATfile	Group	Sample
+GSM813411	Adjacent non-tumor lung tissue	X05L12_N
+GSM813412	Lung adenocarcinoma	X05L12_T
+GSM813413	Adjacent non-tumor lung tissue	X05L13_N
+GSM813414	Lung adenocarcinoma	X05L13_T
+GSM813415	Adjacent non-tumor lung tissue	X05L19_N
+GSM813416	Lung adenocarcinoma	X05L19_T
+GSM813417	Adjacent non-tumor lung tissue	X05L27_N
+GSM813418	Lung adenocarcinoma	X05L27_T
+GSM813419	Adjacent non-tumor lung tissue	X05L32_N
+GSM813420	Lung adenocarcinoma	X05L32_T
+GSM813421	Adjacent non-tumor lung tissue	X05L34_N
+GSM813422	Lung adenocarcinoma	X05L34_T
+GSM813423	Adjacent non-tumor lung tissue	X05L39_N
+GSM813424	Lung adenocarcinoma	X05L39_T
+GSM813425	Adjacent non-tumor lung tissue	X05L4_N
+GSM813426	Lung adenocarcinoma	X05L4_T
+GSM813427	Adjacent non-tumor lung tissue	X05L40_N
+GSM813428	Lung adenocarcinoma	X05L40_T
+GSM813429	Adjacent non-tumor lung tissue	X05L43_N
+GSM813430	Lung adenocarcinoma	X05L43_T
+GSM813431	Adjacent non-tumor lung tissue	X05L45_N
+GSM813432	Lung adenocarcinoma	X05L45_T
+GSM813433	Adjacent non-tumor lung tissue	X05L47_N
+GSM813434	Lung adenocarcinoma	X05L47_T
+GSM813435	Adjacent non-tumor lung tissue	X05L49_N
+GSM813436	Lung adenocarcinoma	X05L49_T
+GSM813437	Adjacent non-tumor lung tissue	X05L54_N
+GSM813438	Lung adenocarcinoma	X05L54_T
+GSM813439	Adjacent non-tumor lung tissue	X05L6_N
+GSM813440	Lung adenocarcinoma	X05L6_T
+GSM813441	Adjacent non-tumor lung tissue	X05L7_N
+GSM813442	Lung adenocarcinoma	X05L7_T
+GSM813443	Adjacent non-tumor lung tissue	X05L9_N
+GSM813444	Lung adenocarcinoma	X05L9_T
+GSM813445	Adjacent non-tumor lung tissue	X06L10_N
+GSM813446	Lung adenocarcinoma	X06L10_T
+GSM813447	Adjacent non-tumor lung tissue	X06L11_N
+GSM813448	Lung adenocarcinoma	X06L11_T
+GSM813449	Adjacent non-tumor lung tissue	x06L14_N
+GSM813450	Lung adenocarcinoma	X06L14_T
+GSM813451	Adjacent non-tumor lung tissue	X06L20_N
+GSM813452	Lung adenocarcinoma	X06L20_T
+GSM813453	Adjacent non-tumor lung tissue	X06L29_N
+GSM813454	Lung adenocarcinoma	X06L29_T
+GSM813455	Adjacent non-tumor lung tissue	X06L3_N
+GSM813456	Lung adenocarcinoma	X06L3_T
+GSM813457	Adjacent non-tumor lung tissue	X06L46_N
+GSM813458	Lung adenocarcinoma	X06L46_T
+GSM813459	Adjacent non-tumor lung tissue	X06L50_N
+GSM813460	Lung adenocarcinoma	X06L50_T
+GSM813461	Adjacent non-tumor lung tissue	X06L54_N
+GSM813462	Lung adenocarcinoma	X06L54_T
+GSM813463	Adjacent non-tumor lung tissue	X06L57_N
+GSM813464	Lung adenocarcinoma	X06L57_T
+GSM813465	Adjacent non-tumor lung tissue	X06L64_N
+GSM813466	Lung adenocarcinoma	X06L64_T
+GSM813467	Adjacent non-tumor lung tissue	X06L71_N
+GSM813468	Lung adenocarcinoma	X06L71_T
+GSM813469	Adjacent non-tumor lung tissue	X07L16_N
+GSM813470	Lung adenocarcinoma	X07L16_T
+GSM813471	Adjacent non-tumor lung tissue	X07L19_N
+GSM813472	Lung adenocarcinoma	X07L19_T
+GSM813473	Adjacent non-tumor lung tissue	X07L21_N
+GSM813474	Lung adenocarcinoma	X07L21_T
+GSM813475	Adjacent non-tumor lung tissue	X07L22_N
+GSM813476	Lung adenocarcinoma	X07L22_T
+GSM813477	Adjacent non-tumor lung tissue	X07L25_N
+GSM813478	Lung adenocarcinoma	X07L25_T
+GSM813479	Adjacent non-tumor lung tissue	X07L28_N
+GSM813480	Lung adenocarcinoma	X07L28_T
+GSM813481	Adjacent non-tumor lung tissue	X07L31_N
+GSM813482	Lung adenocarcinoma	X07L31_T
+GSM813483	Adjacent non-tumor lung tissue	X07L32_N
+GSM813484	Lung adenocarcinoma	X07L32_T
+GSM813485	Adjacent non-tumor lung tissue	X07L38_N
+GSM813486	Lung adenocarcinoma	07L38_T
+GSM813487	Adjacent non-tumor lung tissue	X07L5_N
+GSM813488	Lung adenocarcinoma	X07L5_T
+GSM813489	Adjacent non-tumor lung tissue	X07L51_N
+GSM813490	Lung adenocarcinoma	X07L51_T
+GSM813491	Adjacent non-tumor lung tissue	X07L6_N
+GSM813492	Lung adenocarcinoma	X07L6_T
+GSM813493	Adjacent non-tumor lung tissue	X07L66_N
+GSM813494	Lung adenocarcinoma	X07L66_T
+GSM813495	Adjacent non-tumor lung tissue	X3003_N
+GSM813496	Lung adenocarcinoma	X3003_T
+GSM813497	Adjacent non-tumor lung tissue	X3012_N
+GSM813498	Lung adenocarcinoma	X3012_T
+GSM813499	Adjacent non-tumor lung tissue	X3013_N
+GSM813500	Lung adenocarcinoma	X3013_T
+GSM813501	Adjacent non-tumor lung tissue	X3014_N
+GSM813502	Lung adenocarcinoma	X3014_T
+GSM813503	Adjacent non-tumor lung tissue	X3021_N
+GSM813504	Lung adenocarcinoma	X3021_T
+GSM813505	Adjacent non-tumor lung tissue	X3022_N
+GSM813506	Lung adenocarcinoma	X3022_T
+GSM813507	Lung adenocarcinoma	X3023_T
+GSM813508	Adjacent non-tumor lung tissue	X3024_N
+GSM813509	Lung adenocarcinoma	X3024_T
+GSM813510	Adjacent non-tumor lung tissue	X3030_N
+GSM813511	Lung adenocarcinoma	X3030_T
+GSM813512	Adjacent non-tumor lung tissue	X3031_N
+GSM813513	Lung adenocarcinoma	X3031_T
+GSM813514	Adjacent non-tumor lung tissue	X3032_N
+GSM813515	Lung adenocarcinoma	X3032_T
+GSM813516	Adjacent non-tumor lung tissue	X3033_N
+GSM813517	Lung adenocarcinoma	X3033_T
+GSM813518	Adjacent non-tumor lung tissue	X3035_N
+GSM813519	Adjacent non-tumor lung tissue	X3036_N
+GSM813520	Lung adenocarcinoma	X3036_T
+GSM813521	Adjacent non-tumor lung tissue	X3039_N
+GSM813522	Lung adenocarcinoma	X3039_T
+GSM813523	Adjacent non-tumor lung tissue	L15_N
+GSM813524	Lung adenocarcinoma	L15_T
+GSM813525	Adjacent non-tumor lung tissue	L2_N
+GSM813526	Lung adenocarcinoma	L2_T

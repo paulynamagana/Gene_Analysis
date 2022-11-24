@@ -25,7 +25,7 @@
 *.bgx.gz
 *.tar
 *.log
-*.txt
+
 *.DS_Store
 *.RData
 *.idat
