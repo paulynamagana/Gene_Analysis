@@ -31,4 +31,5 @@
 *.idat
 *.bgx
 *.RDataTmp
-GSE32863/**
+**/latex/**
+**/figure-latex/**

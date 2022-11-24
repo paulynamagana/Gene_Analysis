@@ -1,0 +1,248 @@
+---
+title: "GSE32863, Microarray of lung adenocarcinoma:"
+author: "Paulyna Magana"
+output:
+  pdf_document:
+    toc: true
+    toc_depth: 2
+    number_sections: true
+    fig_width: 6
+    fig_height: 8
+    fig_caption: true
+header-includes:
+- \usepackage{gb4e}
+- \noautomath
+
+always_allow_html: true
+
+knit: (function(input_file, encoding) { output_dir = "./";
+  rmarkdown::render(input_file,
+ encoding=encoding,
+ output_file=file.path(dirname(input_file), output_dir, 'GSE32863_analysis_results'))})
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, cache = TRUE)
+```
+
+## R Markdown
+
+```{r importing, message=FALSE, warning=FALSE}
+
+library(dplyr)
+library(limma)
+library(edgeR)
+readr::local_edition(1)
+library(GEOquery)
+
+my_id <- "GSE32863"
+
+## extract geo expression, fData, eData
+Sys.setenv(VROOM_CONNECTION_SIZE = 256000000)
+expr <- getGEO(my_id)[[1]]
+
+sampleInfo <- pData(expr)
+edata <- exprs(expr) #to compare the edata matrix to the raw data that I'll obtain later
+annot <- fData(expr) #annotation data
+
+
+print(expr@experimentData)
+
+```
+
+
+```{r}
+####read in the data and convert to an ElistRaw object
+baseDir <- './'
+
+#import data
+x <- read.table(paste0(baseDir, 'GSE32863_non-normalized.txt.gz'),
+                header = TRUE, sep = '\t', stringsAsFactors = FALSE, skip = 0)
+x <- x[order(x$ID_REF),] 
+
+
+```
+
+
+```{r}
+#extract pvalues
+detectionpvalues <- x[,grep('Detection.Pval', colnames(x))]
+rownames(detectionpvalues) <- x$ID_REF
+
+#remove pvalues from dataframe
+x <- x[,-grep('Detection.Pval', colnames(x))]
+#extract probes, 1st column
+probes <- x$ID_REF
+
+#convert to matrix
+x <- data.matrix(x[,2:ncol(x)])
+
+#columns and rows names
+rownames(x) <- probes
+colnames(x) <- colnames(edata)
+colnames(detectionpvalues) <- colnames(x)
+
+#verify rownames in x match those in annot
+#dataframes should have same number of observations and rows
+annot <- annot[which(annot$ID %in% rownames(x)),]
+
+```
+
+```{r}
+# create a custom EListRaw object
+project <- new('EListRaw')
+project@.Data[[1]] <- 'illumina'
+project@.Data[[2]] <- sampleInfo
+#project@.Data[[3]] <- annot
+project@.Data[[3]] <- NULL
+project@.Data[[4]] <- x
+project@.Data[[5]] <- NULL
+project$E <- x
+project$targets <- sampleInfo
+project$genes <- annot
+project$other$Detection <- detectionpvalues
+
+#boxplot
+#The intensities vary from about 5 to 16 on the log2 scale:
+boxplot(log2(project$E),range=0,ylab="log2 intensity")
+```
+
+```{r}
+boxplot(project$E)
+```
+
+
+
+```{r}
+#How many probes are truly expressed?
+#The detection values contain p-values for testing whether each probe is more intense than the negative control probes. Small values are evidence that the probe corresponds to a truly expressed gene:
+head(project$other$Detection)
+
+
+########### Background correction / normalisation
+project.bgcorrect.norm <- neqc(project, offset = 16)
+
+
+# filter out control probes, those with no symbol, and those that failed
+Control <- project.bgcorrect.norm$genes$Source=="ILMN_Controls"
+NoSymbol <- project.bgcorrect.norm$genes$Symbol == ""
+isexpr <- rowSums(detectionpvalues <= 0.05) >= 3
+project.bgcorrect.norm.filt <- project.bgcorrect.norm[!Control & !NoSymbol & isexpr, ]
+
+dim(project.bgcorrect.norm)
+dim(project.bgcorrect.norm.filt)
+
+##################summarise across genes by mean
+# ID is used to identify the replicates
+project.bgcorrect.norm.filt.mean <- avereps(project.bgcorrect.norm.filt,
+  ID = project.bgcorrect.norm.filt$genes$Symbol)
+dim(project.bgcorrect.norm.filt.mean)
+
+```
+
+```{r}
+#MDS plot
+plotMDS(project.bgcorrect.norm.filt.mean, labels=project.bgcorrect.norm.filt.mean$targets$source_name_ch1)
+
+####################################################
+
+
+library(pheatmap)
+corMatrix <- cor(project.bgcorrect.norm.filt.mean$E, use = "c")
+pheatmap(corMatrix)
+
+#check they match
+rownames(sampleInfo)
+colnames(corMatrix)
+```
+
+
+```{r}
+##ADDED 12 JUN
+library(limma)
+
+design<- model.matrix(~0 + sampleInfo$source_name_ch1)  
+design
+## the column names are a bit ugly, so we will rename
+colnames(design) <- c("Non_tumor","Adenocarcinoma")
+
+summary(project.bgcorrect.norm.filt.mean$E)
+#calculate cutoff
+cutoff <- median(project.bgcorrect.norm.filt.mean$E)
+
+is_expressed <- project.bgcorrect.norm.filt.mean$E > cutoff
+keep <- rowSums(is_expressed) > 2
+table(keep)
+
+project.bgcorrect.norm.filt.mean$E <- project.bgcorrect.norm.filt.mean$E[keep,]
+
+#fit the model to the data
+#The result of which is to estimate the expression level in each of the groups that we specified.
+fit <- lmFit(project.bgcorrect.norm.filt.mean$E, design)
+fit
+head(fit$coefficients)
+
+contrasts<-makeContrasts(Adenocarcinoma-Non_tumor,levels = design)
+fit2 <- contrasts.fit(fit, contrasts)
+#apply the empirical Bayes step to get our differential expression statistics and p-values.
+fit2 <- eBayes(fit2, trend =TRUE)
+topTable(fit2)
+
+results_rmd <- decideTests(fit2)
+
+table(decideTests(fit2))
+
+summary(decideTests(fit2, method = "global"))
+```
+
+
+#### plots
+
+```{r}
+
+#volcano plot
+library(ggplot2)
+full_results <- topTable(fit2, number=Inf)
+full_results <- tibble::rownames_to_column(full_results, "ID")
+ggplot(full_results, aes(x=logFC, y=B)) +
+  geom_point()
+
+####SA
+plotSA(fit2, main="Final model: Mean-variance trend")
+
+
+############## last bits
+
+tfit <- treat(fit2, lfc=1)
+dt <- decideTests(tfit)
+summary(dt)
+
+
+adeno_vs_non <- topTreat(tfit, coef=1, n=Inf)
+head(adeno_vs_non)
+```
+
+```{r}
+## change according to your needs
+p_cutoff <- 0.05
+fc_cutoff <- 1
+
+full_results %>% 
+  mutate(Significant = adj.P.Val < p_cutoff, abs(logFC) > fc_cutoff ) %>% 
+  ggplot(aes(x = logFC, y = B, col=Significant)) + geom_point()
+```
+
+
+
+```{r plotMD}
+plotMD(tfit, column=1, status=dt[,1], main=colnames(tfit)[1], 
+       xlim=c(2,16))
+
+
+```
+
+
+```{r}
+sessionInfo()
+```
+
