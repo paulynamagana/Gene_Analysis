@@ -4,11 +4,14 @@
 library(dplyr)
 library(limma)
 library(edgeR)
-readr::local_edition()
 library(GEOquery)
 library(DESeq2)
+library(readr)
 
-my_id <- "GSE35863"
+my_id <- "GSE32863"
+bgxfile <- "GPL6884_HumanWG-6_V3_0_R0_11282955_A.bgx.gz"
+targetsfile <- 'targets.txt'
+
 
 
 ## extract geo expression, fData, eData
@@ -56,217 +59,154 @@ colnames(detectionpvalues) <- colnames(x)
 #################################
 ################# data from soft file has been log2 normalised
 
+# read in annotation
+annot <- illuminaio::readBGX(bgxfile)$probes
+annot <- annot[,which(colnames(annot) %in% c('Source','Symbol','Transcript','ILMN_Gene','RefSeq_ID',
+                                             'Entrez_Gene_ID','Symbol','Protein_Product','Probe_Id','Probe_Type',
+                                             'Probe_Start','Chromosome','Probe_Chr_Orientation','Probe_Coordinates',
+                                             'Cytoband', 'Definition', 'Ontology_Component', 'Ontology_Process',
+                                             'Ontology_Function', 'Synonyms'))]
+annot <- annot[which(annot$Probe_Id %in% rownames(x)),]
+annot <- annot[match(rownames(x), annot$Probe_Id),]
 
-####################################
-#http://master.bioconductor.org/packages/release/workflows/vignettes/rnaseqGene/inst/doc/rnaseqGene.html#starting-from-count-matrices
-
-sampleInfo$source_name_ch1 <- gsub(" ", "_", sampleInfo$source_name_ch1)
-
-
-dds <- DESeqDataSetFromMatrix(
-  countData = round(x),
-  colData = sampleInfo,
-  design= ~source_name_ch1)
-
-
-
-nrow(dds)
-
-
-keep <- rowSums(counts(dds)) > 1
-dds <- dds[keep,]
-nrow(dds)
-
-
-library(vsn)
-vsd <- vst(dds, blind = FALSE)
-head(assay(vsd), 3)
-
-colData(vsd)
-
-####Sample distances###
-
-sampleDists <- dist(t(assay(vsd)))
-sampleDists
-
-library("pheatmap")
-library("RColorBrewer")
-
-
-sampleDistMatrix <- as.matrix( sampleDists )
-rownames(sampleDistMatrix) <- paste(vsd$geo_accession, vsd$source_name_ch1, sep = " - " )
-colnames(sampleDistMatrix) <- NULL
-colors <- colorRampPalette( rev(brewer.pal(9, "Blues")) )(255)
-pheatmap(sampleDistMatrix,
-         clustering_distance_rows = sampleDists,
-         clustering_distance_cols = sampleDists,
-         col = colors)
-
-plotPCA(vsd, intgroup = "source_name_ch1")
-
-
-#########differential expression
-dds <- DESeq(dds)
-
-#building results table
-res <- results(dds)
-res
-
-mcols(res, use.names = TRUE)
-
-summary(res)
-
-
-res.05 <- results(dds, alpha = 0.05)
-table(res.05$padj < 0.05)
-
-
-topGene <- rownames(res)[which.min(res$padj)]
-plotCounts(dds, gene = topGene, intgroup=c("source_name_ch1"))
-
-
-library("apeglm")
-resultsNames(dds)
-res <- lfcShrink(dds, coef="source_name_ch1_Lung_adenocarcinoma_vs_Adjacent_non.tumor_lung", type="apeglm")
-plotMA(res, ylim = c(-5, 5))
-
-
-hist(res$pvalue[res$baseMean > 1], breaks = 0:20/20,
-     col = "grey50", border = "white")
+# update the target info
+targetinfo <- readTargets(targetsfile, sep = '\t')
+rownames(targetinfo) <- targetinfo$IDATfile
+x <- x[,match(rownames(targetinfo), colnames(x))]
+if (!all(colnames(x) == rownames(targetinfo)))
+  stop('Target info is not aligned to expression data - they must be in the same order')
 
 
 
 
-anno <- select(annot,Symbol,Entrez_Gene_ID,Chromosome,Cytoband)
-res$genes <- anno
-head(res)
+# create a custom EListRaw object
+project <- new('EListRaw')
+project@.Data[[1]] <- 'illumina'
+project@.Data[[2]] <- targetinfo
+#project@.Data[[3]] <- annot
+project@.Data[[3]] <- NULL
+project@.Data[[4]] <- x
+project@.Data[[5]] <- NULL
+project$E <- x
+project$targets <- targetinfo
+project$genes <- annot
+project$other$Detection <- detectionpvalues
 
 
-filter(res)
 
-############################################log2 normalisation
-x_log <- log2(x)
-
-Control <- annot$Source=="ILMN_Controls"
-NoSymbol <- annot$Symbol == ""
-isexpr <- rowSums(detectionpvalues <= 0.05) >= 3
-x_log <- x_log[!Control & !NoSymbol & isexpr, ]
-
-sampleInfo <- select(sampleInfo, source_name_ch1,characteristics_ch1.1)
-
-## Optionally, rename to more convenient column names
+# normalize the data with the 'quantile' method, to be consistent with RMA for Affymetrix arrays
+project.bgcorrect.norm <- neqc(project, offset = 16)
 
 
-library(pheatmap)
-## argument use="c" stops an error if there are any missing data points
-
-corMatrix <- cor(x_log,use="c")
-pheatmap(corMatrix)     
-rownames(sampleInfo)
-colnames(corMatrix)
-
-rownames(sampleInfo) <- colnames(corMatrix)
-pheatmap(corMatrix,
-         annotation_col=sampleInfo)    
 
 
-library(ggrepel)
-## MAKE SURE TO TRANSPOSE THE EXPRESSION MATRIX
-
-pca <- prcomp(t(x_log))
-
-## Join the PCs to the sample information
-cbind(sampleInfo, pca$x) %>% 
-  ggplot(aes(x = PC1, y=PC2, col=source_name_ch1,label=paste("batch", characteristics_ch1.1))) + geom_point() + geom_text_repel()
+# filter out control probes, those with no symbol, and those that failed
+annot <- annot[which(annot$Probe_Id %in% rownames(project.bgcorrect.norm)),]
+project.bgcorrect.norm <- project.bgcorrect.norm[which(rownames(project.bgcorrect.norm) %in% annot$Probe_Id),]
+annot <- annot[match(rownames(project.bgcorrect.norm), annot$Probe_Id),]
+project.bgcorrect.norm@.Data[[3]] <- annot
+project.bgcorrect.norm$genes <- annot
 
 
-library(readr)
-features <- select(annot,Symbol,Entrez_Gene_ID,Chromosome,Cytoband)
-full_output <- cbind(features, x_log)
-write_csv(full_output, path="gse_full_output.csv")
 
-##differential expression########################################
-library(limma)
-design <- model.matrix(~0+sampleInfo$source_name_ch1)
-design
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Control <- project.bgcorrect.norm$genes$Source=="ILMN_Controls"
+NoSymbol <- project.bgcorrect.norm$genes$Symbol == ""
+isexpr <- rowSums(project.bgcorrect.norm$other$Detection <= 0.05) >= 2
+project.bgcorrect.norm.filt <- project.bgcorrect.norm[!Control & !NoSymbol & isexpr, ]
+dim(project.bgcorrect.norm)
+dim(project.bgcorrect.norm.filt)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# remove annotation columns we no longer need
+project.bgcorrect.norm.filt$genes <- project.bgcorrect.norm.filt$genes[,c(
+  'Probe_Id',
+  'Definition','Ontology_Component','Ontology_Process','Ontology_Function',
+  'Chromosome','Probe_Coordinates','Cytoband','Probe_Chr_Orientation',
+  'RefSeq_ID','Entrez_Gene_ID','Symbol')]
+head(project.bgcorrect.norm.filt$genes)
+
+# summarise across genes by mean
+# ID is used to identify the replicates
+project.bgcorrect.norm.filt.mean <- avereps(project.bgcorrect.norm.filt,
+                                            ID = project.bgcorrect.norm.filt$genes$Symbol)
+dim(project.bgcorrect.norm.filt.mean)
+
+
+
+### diferential expression ####
+
+
+design<- model.matrix(~0 + targetinfo$Group)
+colnames(design)
 
 ## the column names are a bit ugly, so we will rename
-colnames(design) <- c("Normal","Tumour")
+colnames(design) <- c("Adjacent_non_tumor","Lung_Adenocarcinoma")
 
-summary(x_log)
+aw <- arrayWeights(project.bgcorrect.norm.filt.mean, design)
 
-## calculate median expression level
-cutoff <- median(x_log)
-
-## TRUE or FALSE for whether each gene is "expressed" in each sample
-is_expressed <- x_log > cutoff
-
-## Identify genes expressed in more than 2 samples
-keep <- rowSums(is_expressed) > 2
-
-## check how many genes are removed / retained.
-table(keep)
-
-## subset to just those expressed genes
-gse <- x_log[keep,]
-
-fit <- lmFit(gse, design)
-head(fit$coefficients)
+fit <- lmFit(project.bgcorrect.norm.filt.mean, design, weights= aw)
 
 
-contrasts <- makeContrasts(Tumour - Normal, levels=design)
+contrasts2<-makeContrasts(Adjacent_non_tumor-Lung_Adenocarcinoma,levels=design)
 
-## can define multiple contrasts
-## e.g. makeContrasts(Group1 - Group2, Group2 - Group3,....levels=design)
-
-fit2 <- contrasts.fit(fit, contrasts)
-
-
-fit2 <- eBayes(fit2)
-
-topTable(fit2)
-decideTests(fit2)
-table(decideTests(fit2))
-
-
-## calculate relative array weights
-aw <- arrayWeights(x_log,design)
-aw
-
-fit <- lmFit(x_log, design,
-             weights = aw)
-contrasts <- makeContrasts(Tumour - Normal, levels=design)
-fit2 <- contrasts.fit(fit, contrasts)
-fit2 <- eBayes(fit2, trend = TRUE)
-
-
-anno <- select(anno,Symbol,Entrez_Gene_ID,Chromosome,Cytoband)
-fit2$genes <- anno
-topTable(fit2)
-
-full_results <- topTable(fit2, number=Inf)
-full_results <- tibble::rownames_to_column(full_results,"ID")
-
-## Make sure you have ggplot2 loaded
-library(ggplot2)
-ggplot(full_results,aes(x = logFC, y=B)) + geom_point()
+contr.fit2<-eBayes(contrasts.fit(fit,contrasts2))
 
 
 
-## change according to your needs
-p_cutoff <- 0.05
-fc_cutoff <- 1
-
-full_results %>% 
-  mutate(Significant = adj.P.Val < p_cutoff, abs(logFC) > fc_cutoff ) %>% 
-  ggplot(aes(x = logFC, y = B, col=Significant)) + geom_point()
 
 
-filter(full_results,  grepl("SLC22", Symbol))
-plotSA(fit2)
+
+volcanoplot(contr.fit2,main="non-tumor-Adenocarcinoma")
+
+results <- decideTests(contr.fit2, method= "global")
+
+vennDiagram(results)
+
+topTable(contr.fit2,coef=1)
 
 
-plotMD(fit2, column=1, status=dt[,1], main=colnames(fit2)[1], xlim=c(6,16))
+plotMD(contr.fit2, status= results)
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

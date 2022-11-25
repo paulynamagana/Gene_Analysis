@@ -224,8 +224,8 @@ head(adeno_vs_non)
 
 ```{r}
 ## change according to your needs
-p_cutoff <- 0.05
-fc_cutoff <- 1
+p_cutoff <- 0.001
+fc_cutoff <- 2
 
 full_results %>% 
   mutate(Significant = adj.P.Val < p_cutoff, abs(logFC) > fc_cutoff ) %>% 

@@ -9,23 +9,21 @@ output:
     fig_width: 6
     fig_height: 8
     fig_caption: true
-header-includes:
-- \usepackage{gb4e}
-- \noautomath
+    keep_md: true
 
-always_allow_html: true
 
 knit: (function(input_file, encoding) { output_dir = "./";
   rmarkdown::render(input_file,
  encoding=encoding,
  output_file=file.path(dirname(input_file), output_dir, 'GSE32863_analysis_results'))})
+ 
 ---
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE, cache = TRUE)
 ```
 
-## R Markdown
+## Installing libraries
 
 ```{r importing, message=FALSE, warning=FALSE}
 
@@ -36,7 +34,14 @@ library(edgeR)
 library(Biobase)
 readr::local_edition(1)
 library(GEOquery)
+require(RColorBrewer)
+require(PCAtools)
+```
 
+
+## Load Data
+
+```{r data, warning=FALSE}
 my_id <- "GSE32863"
 
 ## extract geo expression, fData, eData
@@ -48,24 +53,21 @@ edata <- exprs(expr) #to compare the edata matrix to the raw data that I'll obta
 annot <- fData(expr) #annotation data
 
 
-print(expr@experimentData)
+# print data info from GEO
+print(expr@experimentData@)
 
 ```
 
-## load files
+### load files
 
 ```{r}
 baseDir <- "./"
-bgxfile <- "GPL6884_HumanWG-6_V3_0_R0_11282955_A.bgx"
+bgxfile <- "./GSE32863/GPL6884_HumanWG-6_V3_0_R0_11282955_A.bgx.gz"
 targetsfile <- 'targets.txt'
 
 options(scipen = 99)
-require(limma)
-require(RColorBrewer)
-require(PCAtools)
-```
 
-```{r}
+
 # read in the data and convert the data to an EListRaw object, which is a data object for single channel data
 x <- read.table(paste0(baseDir, 'GSE32863_non-normalized.txt.gz'),
     header = TRUE, sep = '\t', stringsAsFactors = FALSE, skip = 0)
@@ -73,6 +75,10 @@ x <- read.table(paste0(baseDir, 'GSE32863_non-normalized.txt.gz'),
 # update the target info
 targetinfo <- readTargets(targetsfile, sep = '\t')
 
+```
+
+
+```{r modify rows and column names, warning= FALSE}
 rownames(targetinfo) <- targetinfo$IDATfile
 
 detectionpvalues <- x[,grep('Detection.Pval', colnames(x))]
@@ -97,12 +103,12 @@ if (!all(colnames(x) == rownames(targetinfo)))
 
 
 
-```{r}
+```{r annot}
 # read in annotation
 
 annot <- illuminaio::readBGX(bgxfile)$probes
 
-annot <- annot[,which(colnames(annot) %in% c('Source','Symbol','Transcript','ILMN_Gene','RefSeq_ID',
+annot <- annot[,which(colnames(annot) %in% c('Source','Transcript','ILMN_Gene','RefSeq_ID',
     'Entrez_Gene_ID','Symbol','Protein_Product','Probe_Id','Probe_Type',
     'Probe_Start','Chromosome','Probe_Chr_Orientation','Probe_Coordinates',
     'Cytoband', 'Definition', 'Ontology_Component', 'Ontology_Process',
@@ -115,8 +121,9 @@ annot <- annot[match(rownames(x), annot$Probe_Id),]
 
 
 
+### create ElistRaw for neqc
 
-```{r warning=FALSE}
+```{r ElistRaw, warning=FALSE}
 # create a custom EListRaw object
 project <- new('EListRaw')
 project@.Data[[1]] <- 'illumina'
@@ -128,28 +135,40 @@ project@.Data[[4]] <- x
 project@.Data[[5]] <- NULL
 project$E <- x
 project$targets <- targetinfo
-#project$genes <- annot
-project$genes <- NULL
+project$genes <- annot
 project$other$detection <- detectionpvalues
 
 ```
 
 
+Dimensions of the project
 
-```{r}
+```{r dim project}
 dim(project)
 ```
 
 
+Another quality control check is to plot the distribution of log base 2 intensities (log2(PMij) for array i and probe j) of perfect match probes for comparison of probe intensity behavior between different arrays. If you see differences in shape or center of the distributions, it means that normalization is required.
+
+```{r densities raw, fig.width=12}
+plotDensities(project, legend=FALSE)
+```
+
+Boxplots and histograms show the same differences in probe intensity behavior between arrays. In order to perform meaningful statistical analysis and inferences from the data, you need to ensure that all the samples are comparable. To examine and compare the overall distribution of log transformed PM intensities between the samples you can use a histogram but you will get a clearer view with a box plot. Box plots show:
+
+the median: center value, half of the intensities are lower than this value, half of the intensities are higher (= line in the box)
+the upper quartile: a quarter of the values are higher than this quartile (= upper border of the box)
+the lower quartile: a quarter of the values are lower than this quartile (= lower border of the box)
+the range: minimum and maximum value (= borders of the whiskers)
+individual extreme values (= points outside the whiskers)
 
 
 ```{r}
-summary(project$E)
+boxplot(log2(project$E),range=0, ylab="log2 intensity",
+  main= "Boxplot of log2-intensiyties for RAW data")
 ```
 
-```{r, fig.width=12}
-plotDensities(project, legend=FALSE)
-```
+The distribution of the intensities in each array illustrates the need for a normalization step.
 
 ### generate QC plots of raw intensities
 
@@ -158,15 +177,38 @@ dir.create('QC/')
 ```
 
 
+```{r, fig.height=6}
+exp_raw <- log2(project$E)
+PCA_raw <- prcomp(t(exp_raw), scale. = FALSE)
+percentVar <- round(100*PCA_raw$sdev^2/sum(PCA_raw$sdev^2),1)
+sd_ratio <- sqrt(percentVar[2] / percentVar[1])
 
-```{r}
-boxplot(log2(project$E),range=0,ylab="log2 intensity")
+dataGG <- data.frame(PC1 = PCA_raw$x[,1], PC2 = PCA_raw$x[,2],
+                    Sample = sampleInfo$source_name_ch1,
+                    Batch = sampleInfo$characteristics_ch1.1)
+
+ggplot(dataGG, aes(PC1, PC2)) +
+      geom_point(aes(colour = Batch, shape = Sample)) +
+  ggtitle("PCA plot of the log-transformed raw expression data") +
+  xlab(paste0("PC1, VarExp: ", percentVar[1], "%")) +
+  ylab(paste0("PC2, VarExp: ", percentVar[2], "%")) +
+  theme(plot.title = element_text(hjust = 0.5))+
+  scale_shape_manual(values = c(4,15)) + 
+  scale_color_manual(values = c("darkorange2", "dodgerblue4"))
 ```
 
 
 
+PCA plot of the raw data shows that the first principal component does not differentiate between the diseases. This means that the disease type is a major driver of gene expression differences. There is no batch effect
 
-```{r}
+Perform PCS and plot
+
+For quality control, we take the log2 of raw data, as expression data is commonly analyzed on a logarithmic scale.
+
+
+## Background correction and normalization
+
+
 # for BeadArrays, background correction and normalisation are handled by a single function: neqc()
 # this is the same as per Agilent single colour arrays
 #
@@ -175,12 +217,20 @@ boxplot(log2(project$E),range=0,ylab="log2 intensity")
 #   for ideal offset, see Gordon Smyth's answer, here: https://stat.ethz.ch/pipermail/bioconductor/2006-April/012554.html
 # normalize the data with the 'quantile' method, to be consistent with RMA for Affymetrix arrays
 
+
+
+The offset is added to the expression values after the background correction so that no negative values appear in the data.
+
+
+```{r}
 #Background correction / normalisation
-project.bgcorrect.norm <- neqc(project)
+project.bgcorrect.norm <- neqc(project, offset = 16)
 
 ```
 
+The neqc functions performs normexp background correction using negative controls, then quantile normalizes and finally log2 transforms [36]. It also automatically removes the control probes, leaving only the regular probes.
 
+ Note: inferring mean and variance of negative control probe intensities from the detection p-values. indicates that the normalisation process is already utilising the detection p-values; so, this is good news.
 
 
 ```{r}
@@ -194,6 +244,33 @@ annot <- annot[match(rownames(project.bgcorrect.norm), annot$Probe_Id),]
 project.bgcorrect.norm@.Data[[3]] <- annot
 project.bgcorrect.norm$genes <- annot
 
+dim(project.bgcorrect.norm)
+
+```
+
+
+```{r densities raw, fig.width=12}
+plotDensities(project.bgcorrect.norm, legend=FALSE)
+```
+
+
+```{r boxplots, fig.height= 12, dev= 'png'}
+
+par(mfrow = c(3,1))
+
+boxplot(log2(project$E[project$genes$Source == "ILMN_Controls", ]),
+        range = 0, las = 2, xlab = "", ylab = expression(log[2](intensity)),
+        main = "Control probes, RAW data")
+
+boxplot(log2(project$E[project$genes$Source == "RefSeq", ]),
+        range = 0, las = 2, xlab = "", ylab = expression(log[2](intensity)),
+        main = "Regular probes, RAW data")
+
+
+boxplot(project.bgcorrect.norm$E, range = 0, ylab = expression(log[2](intensity)),
+        las = 2, xlab = "", main = "Regular probes, NEQC normalized")
+
+
 ```
 
 
@@ -206,36 +283,85 @@ table(project.bgcorrect.norm$genes$Source)
 
 
 
+
+
+
 ```{r}
 boxplot(log2(project.bgcorrect.norm$E),range=0,ylab="log2 intensity")
 ```
 
+```{r heatmap, warning=FALSE}
+library(pheatmap)
+
+corMatrix <- cor(project.bgcorrect.norm$E,use="c")
+pheatmap(corMatrix)     
+
+```
 
 
 
 ```{r}
-plotMDS(project.bgcorrect.norm,labels=targetinfo$Group)
+groups <- targetinfo[1:2]
+
+pheatmap(corMatrix,
+         annotation_col=groups)
+
 ```
 
 
-## filtering
+
+```{r, fig.height=6}
+exp_raw <- log2(project.bgcorrect.norm$E)
+PCA_raw <- prcomp(t(exp_raw), scale. = FALSE)
+percentVar <- round(100*PCA_raw$sdev^2/sum(PCA_raw$sdev^2),1)
+sd_ratio <- sqrt(percentVar[2] / percentVar[1])
+
+dataGG <- data.frame(PC1 = PCA_raw$x[,1], PC2 = PCA_raw$x[,2],
+                    Sample = sampleInfo$source_name_ch1,
+                    Batch = sampleInfo$characteristics_ch1.1)
+
+ggplot(dataGG, aes(PC1, PC2)) +
+      geom_point(aes(colour = Batch, shape = Sample)) +
+  ggtitle("PCA plot of the log-transformed raw expression data") +
+  xlab(paste0("PC1, VarExp: ", percentVar[1], "%")) +
+  ylab(paste0("PC2, VarExp: ", percentVar[2], "%")) +
+  theme(plot.title = element_text(hjust = 0.5))+
+  scale_shape_manual(values = c(4,15)) + 
+  scale_color_manual(values = c("darkorange2", "dodgerblue4"))
+```
+
+In comparison to the first PCA analysis before RMA (Figure 2), we see that now the first principal component separates between the tissues types (Figure 6). This indicates that now differential expression between the tissue types is the dominant source of variation. Note that the second principal component separates the diseases.
+
+### Dealing with Batch Effects
+
+Multidimensional scaling (MDS), assesses sample similarity based on pair-wise distances between samples. This dimension reduction technique uses the top 500 most variable genes between each pair of samples to calculate a matrix of Euclidean distances which are used to generate a 2 dimensional plot. Ideally, samples should separate based on biological variables (RNA source, sex, treatment, etc.), but often technical effects (such as samples processed together on the same BeadChip) may dominate. Principal component analysis (PCA) is another dimension reduction technique frequently applied to microarray data.
+
+```{r}
+plotMDS(project.bgcorrect.norm$E, labels=targetinfo$Group)
+```
+
+The first dimension separated the Adenocarcinoma from non-tumor tissue samples.
+The scale for dimension 2 is much reduced compared to dimension 1, indicating that the underlying biological differences between the two RNA sources explains most of the between sample variation.
+
+## filtering based on probe annotation
+
+Filtering non-responding probes from further analysis can improve the power to detect differential expression. One way of achieving this is to remove probes whose probe sequence has undesirable properties. Annotation quality information is available from the platform specific annotation packages
+
+```{r}
+
+aveSignal <- rowMeans(project.bgcorrect.norm$E)
+boxplot(aveSignal)
+
+```
+
+
 
 ```{r}
 Control <- project.bgcorrect.norm$genes$Source=="ILMN_Controls"
 NoSymbol <- project.bgcorrect.norm$genes$Symbol == ""
-isexpr <- rowSums(project.bgcorrect.norm$other$detection <= 0.05) >= 2
+isexpr <- rowSums(project.bgcorrect.norm$other$detection <= 0.05) >= 3
 
-project.bgcorrect.norm.filt <- project.bgcorrect.norm[!Control & !NoSymbol & isexpr, ]
-dim(project.bgcorrect.norm)
 ```
-
-
-
-```{r}
-dim(project.bgcorrect.norm.filt)
-```
-
-
 
 
 ```{r}
@@ -246,6 +372,52 @@ table(NoSymbol)
 table(isexpr)
 ```
 
+
+```{r}
+project.bgcorrect.norm.filt <- project.bgcorrect.norm[!Control & !NoSymbol & isexpr, ]
+
+dim(project.bgcorrect.norm)
+```
+
+
+
+```{r}
+dim(project.bgcorrect.norm.filt)
+```
+
+```{r densities raw, fig.width=12}
+plotDensities(project.bgcorrect.norm.filt, legend=FALSE)
+```
+
+
+```{r}
+plotMDS(project.bgcorrect.norm.filt, labels= targetinfo$Group)
+```
+
+
+```{r}
+IQR <- apply(project.bgcorrect.norm.filt$E, 1, IQR, na.rm = TRUE)
+topVar <- order(IQR, decreasing = TRUE)[1:500]
+d <- dist(t(project.bgcorrect.norm.filt$E[topVar, ]))
+plot(hclust(d))
+
+```
+We calculate the interquartile range (IQR) of each probe across all samples and then order to f ind the 500 (an arbitrary number) most variable. These probes are then used to cluster the data in a standard 
+
+Heatmap to show the differences between groups
+
+```{r}
+heatmap(project.bgcorrect.norm.filt$E[topVar, ])
+```
+
+
+
+```{r}
+
+aveSignal <- rowMeans(project.bgcorrect.norm.filt$E)
+boxplot(aveSignal)
+
+```
 
 
 
@@ -267,8 +439,11 @@ head(project.bgcorrect.norm.filt$genes)
 ```{r}
 # summarise across genes by mean
 # ID is used to identify the replicates
-project.bgcorrect.norm.filt.mean <- avereps(project.bgcorrect.norm.filt, ID = project.bgcorrect.norm.filt$genes$Symbol)
 
+project.bgcorrect.norm.filt.mean <- avereps(project.bgcorrect.norm.filt,
+    ID = project.bgcorrect.norm.filt$genes$Symbol)
+
+#new dimensions
 dim(project.bgcorrect.norm.filt.mean)
 
 ```
@@ -276,17 +451,34 @@ dim(project.bgcorrect.norm.filt.mean)
 
 
 ```{r}
+for (i in 1:6)
+  {
+  name = paste("./QC/histogram",i,".jpg",sep="")
+  jpeg(name)
+  hist(project.bgcorrect.norm.filt.mean$E[,i],lwd=2, ylab='Density',xlab='Log2 intensities',main=project.bgcorrect.norm.filt.mean$targets$IDATfile[i])
+  dev.off()
+  }
+```
 
+
+
+
+
+### Differential Expression Analysis
+
+The differential expression methods available in the limma package can be used to identify differentially expressed genes. The functions lmFit, contrasts.fit eBayes can be applied to the normalized and filtered data
+
+
+
+```{r}
 design<- model.matrix(~0 + targetinfo$Group)
 
 ## the column names are a bit ugly, so we will rename
 colnames(design) <- c("Adjacent_non_tumor","Lung_Adenocarcinoma")
+aw <- arrayWeights(project.bgcorrect.norm.filt.mean, design)
 
-
-fit <- lmFit(project.bgcorrect.norm.filt.mean, design)
-
+fit <- lmFit(project.bgcorrect.norm.filt.mean, design, weights= aw)
 ```
-
 
 
 
@@ -295,33 +487,42 @@ hist(fit$Amean)
 ```
 
 
-
-
 ```{r}
 plotSA(fit)
 ```
 
 
-
 ```{r}
-contrasts<-makeContrasts(Lung_Adenocarcinoma - Adjacent_non_tumor,levels = design)
-
-fit2 <- contrasts.fit(fit, contrasts)
-
-#Finally, apply the empirical Bayes’ step to get our differential expression statistics and p-values.
-
-fit2 <- eBayes(fit2)
-
-topTable(fit2)
+barplot(aw, xlab="Array", ylab="Weight", col="white", las=2)
+abline(h=1, lwd=1, lty=2)
 ```
 
 
+
+```{r}
+contrasts <- makeContrasts(Lung_Adenocarcinoma - Adjacent_non_tumor,levels = design)
+
+#Finally, apply the empirical Bayes’ step to get our differential expression statistics and p-values.
+
+contr.fit <- eBayes(contrasts.fit(fit, contrasts))
+
+topTable(contr.fit)
+```
+
+
+
+The code above shows how to set up a design matrix for this experiment to combine the data from the Adenocarcinoma and non tumor  replicates to give one value per condition.
+
+Empirical array quality weights [11] can be used to measure the relative reliability of each array. A variance is estimated for each array by the arrayWeights function which measures how well the expression values from each array follow the linear model. These variances are converted to relative weights which can then be used in the linear model to down-weight observations from less reliable arrays which improves power to detect differential expression.
+
+We then define a contrast comparing Adenocarcinoma to non-tumor and calculate moderated tstatistics with empirical Bayes’ shrinkage of the sample variances.
 
 
 ```{r}
 #If we want to know how many genes are differentially-expressed overall we can use the decideTests function.
 
-results <- decideTests(fit2)
+results <- decideTests(contr.fit, method= "global")
+
 vennDiagram(results)
 
 ```
@@ -336,28 +537,11 @@ summary(results)
 
 ## Further processing and visualisation of DE results
 
-```{r}
-rownames(annot) <- annot$Probe_Id
-annot
-
-```
-
-
 
 
 ```{r}
-anno <- select(annot,Symbol,Entrez_Gene_ID,Chromosome,Cytoband)
+full_results <- topTable(contr.fit, number=Inf)
 
-fit2$genes <- anno
-
-topTable(fit2)
-```
-
-
-
-
-```{r}
-full_results <- topTable(fit2, number=Inf)
 full_results <- tibble::rownames_to_column(full_results,"ID")
 ```
 
@@ -366,7 +550,9 @@ full_results <- tibble::rownames_to_column(full_results,"ID")
 ```{r}
 ## Make sure you have ggplot2 loaded
 library(ggplot2)
-ggplot(full_results,aes(x = logFC, y=B)) + geom_point()
+
+ggplot(full_results, aes(x = logFC, y=B)) + geom_point()
+
 ```
 
 
@@ -374,19 +560,29 @@ ggplot(full_results,aes(x = logFC, y=B)) + geom_point()
 ```{r}
 ## change according to your needs
 p_cutoff <- 0.05
-fc_cutoff <- 2
+fc_cutoff <- 1
 
 full_results %>% 
   mutate(Significant = adj.P.Val < p_cutoff, abs(logFC) > fc_cutoff ) %>% 
   ggplot(aes(x = logFC, y = B, col=Significant)) + geom_point()
+
 ```
 
 
+```{r}
+par(mfrow = c(1, 2))
+
+volcanoplot(contr.fit)
+
+smoothScatter(contr.fit$Amean, contr.fit$coefficients, xlab = "averge intensity", ylab = "log-ratio")
+abline(h = 0, col=2, lty=2)
+
+```
 
 
 ```{r}
 ####SA
-plotSA(fit2, main="Final model: Mean-variance trend")
+plotSA(contr.fit, main="Final model: Mean-variance trend")
 
 ```
 
@@ -403,60 +599,15 @@ M is the difference between the intensity of a probe on the array and the median
 A is the average of the intensity of a probe on that array and the median intesity of that probe over all arrays A = (logPMInt_array + logPMInt_medianarray)/2
 
 ```{r}
-plotMD(fit2, status=results)
+
+plotMD(contr.fit, status=results)
+
 ```
 
 Ideally, the cloud of data points in the MA-plot should be centered around M=0 (blue line). This is because we assume that the majority of the genes is not DE and that the number of upregulated genes is similar to the number of downregulated genes. Additionally, the variability of the M values should be similar across different array-medianarray combinations. You see that the spread of the point cloud increases with the average intensity: the loess curve (red line) moves further and further away from M=0 when A increases. To remove (some of this) dependency, we will normalize the data.
 
-##### from neqc
-
-```{r, fig.width=12}
-plotDensities(project.bgcorrect.norm.filt, legend=FALSE)
-```
-
-
-
-```{r}
-average <- median(project.bgcorrect.norm.filt$E)
-is_expressed <- project.bgcorrect.norm.filt$E > average
-
-## Identify genes expressed in more than 2 samples
-keep <- rowSums(is_expressed) > 2
-
-## check how many genes are removed / retained.
-table(keep)
-
-## subset to just those expressed genes
-gse <- project.bgcorrect.norm.filt[keep,]
-
-dim(gse)
-
-aw <- arrayWeights(gse, design)
-fit_gse <- lmFit(gse, design, weights = aw)
-contr_gse_fit_ebayes <- eBayes(contrasts.fit(fit_gse, contrasts))
-
-volcanoplot(contr_gse_fit_ebayes)
-
-```
 
 
 
 
-```{r}
-smoothScatter(contr_gse_fit_ebayes$Amean, contr_gse_fit_ebayes$coefficients, xlab = "averge intensity", ylab = "log-ratio")
-abline(h = 0, col=2, lty=2)
-```
 
-
-
-```{r}
-barplot(aw, xlab="Array", ylab="Weight", col="white", las=2)
-abline(h=1, lwd=1, lty=2)
-```
-
-
-
-
-```{r}
-summary(decideTests(contr_gse_fit_ebayes))
-```
