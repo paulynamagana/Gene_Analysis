@@ -1,8 +1,15 @@
 
+#building targetsfile from pdata
+#targets <- sampleInfo[,which(colnames(sampleInfo) %in% c("title", "geo_accession", "source_name_ch1"))]
+#rownames(targets) <- NULL
+targets$title <-sub("^","X",targets$title)
+write.csv(targets, file ="targets.csv")
+
 
 ########1 SET FOR SAVING PLOTS #################
 
-save_dir <- "./v4/"
+save_dir <- "./data_plots/"
+dir.create(save_dir)
 
 ###################1.1 LIBRARIES ##################
 
@@ -15,9 +22,9 @@ library(GEOquery)
 require(RColorBrewer)
 require(PCAtools)
 
-my_id <- "GSE32863"
+my_id <- "GSE75037"
 bgxfile <- "GPL6884_HumanWG-6_V3_0_R0_11282955_A.bgx.gz"
-targetsfile <- 'targets.txt'
+targetsfile <- 'targets.csv'
 
 
 ############ 1.2 LOAD DATA #################
@@ -32,7 +39,10 @@ sampleInfo <- pData(expr)
 edata <- exprs(expr) #to compare the edata matrix to the raw data that I'll obtain later
 annot <- fData(expr) #annotation data
 
-boxplot(edata)
+#plot series from GEO
+png(paste0(save_dir, "densities_from_GEOseries.png"), width=1200, height=850)
+boxplot(edata, main ="boxplot from expr data from GEO")
+dev.off()
 
 # print data info from GEO
 print("Abstract from project")
@@ -41,7 +51,7 @@ print(expr@experimentData@abstract)
 # get the abstract
 exp_data <- expr@experimentData@abstract
 # save#
-fileConn<-file("GSE32863_EXPDATA.txt")
+fileConn<-file(paste0(my_id,"_data_abstract.txt"))
 writeLines(exp_data, fileConn)
 close(fileConn)
 
@@ -49,8 +59,8 @@ close(fileConn)
 ################################## read in the raw data 
 baseDir <- './'
 bgxfile <- "GPL6884_HumanWG-6_V3_0_R0_11282955_A.bgx.gz"
-targetsfile <- 'targets.txt'
-file <- "GSE32863_non-normalized.txt.gz"
+targetsfile <- 'targets.csv'
+file <- "GSE75037_non_normalized.txt.gz"
 
 #read in data
 x <- read.table(paste0(baseDir, file),
@@ -72,9 +82,11 @@ x <- data.matrix(x[,2:ncol(x)])
 
 
 ######################################## load the target info
-targetinfo <- readTargets(targetsfile, sep = '\t')
+targetinfo <- read.csv(targetsfile)
 
-rownames(targetinfo) <- targetinfo$IDATfile
+
+
+rownames(targetinfo) <- targetinfo$geo_accession
 #columns and rows names
 rownames(x) <- probes
 colnames(x) <- colnames(edata)
@@ -83,8 +95,7 @@ colnames(detectionpvalues) <- colnames(x)
 
 x <- x[,match(rownames(targetinfo), colnames(x))]
 
-if (!all(colnames(x) == rownames(targetinfo)))
-  stop('Target info is not aligned to expression data - they must be in the same order')
+if (!all(colnames(x) == rownames(targetinfo))) stop('Target info is not aligned to expression data - they must be in the same order')
 
 
 
@@ -128,7 +139,7 @@ project$other$detection <- detectionpvalues
 
 ### Dimensions of the project
 print("dimensions of project")
-dim(project) # 48803   116
+dim(project) # 48803   166
 
 write.table(dim(project), file = paste0(save_dir, "dimensions_project.csv"))
 
@@ -152,8 +163,8 @@ percentVar <- round(100*PCA_raw$sdev^2/sum(PCA_raw$sdev^2),1)
 sd_ratio <- sqrt(percentVar[2] / percentVar[1])
 
 data_raw <- data.frame(PC1 = PCA_raw$x[,1], PC2 = PCA_raw$x[,2],
-                     Sample = sampleInfo$source_name_ch1,
-                     Batch = sampleInfo$characteristics_ch1.1)
+                     Sample = sampleInfo$`histology:ch1`,
+                     Batch = sampleInfo$characteristics_ch1.2)
 
 # ggplot PCA and save plot#
 png(paste0(save_dir, "pca_rawdata.png"), width=1200, height=850)
@@ -163,7 +174,7 @@ ggplot(data_raw, aes(PC1, PC2)) +
   xlab(paste0("PC1, VarExp: ", percentVar[1], "%")) +
   ylab(paste0("PC2, VarExp: ", percentVar[2], "%")) +
   theme(plot.title = element_text(hjust = 0.5))+
-  scale_shape_manual(values = c(4,15)) + 
+  scale_shape_manual(values = c(4,15)) +
   scale_color_manual(values = c("darkorange2", "dodgerblue4"))
 dev.off()
 
@@ -196,8 +207,8 @@ project.bgcorrect.norm@.Data[[3]] <- annot
 project.bgcorrect.norm$genes <- annot
 
 #print dimensions
-print("dimensions of prohect after neqc")
-dim(project.bgcorrect.norm) #48803   116
+print("dimensions of project after neqc")
+dim(project.bgcorrect.norm) #48803   166
 
 write.table(dim(project.bgcorrect.norm), file = paste0(save_dir, "dimensions_project_bgcorrect_norm.csv"))
 
@@ -259,7 +270,7 @@ pheatmap(corMatrix)
 dev.off()
 ####
 ###
-groups <- targetinfo[1:2]
+groups <- targetinfo[4:4]
 
 png(paste0(save_dir, "heatmap_neqc_groups.png"), width=1000, height=750)
 pheatmap(corMatrix,
@@ -275,8 +286,8 @@ percentVar <- round(100*PCA_raw$sdev^2/sum(PCA_raw$sdev^2),1)
 sd_ratio <- sqrt(percentVar[2] / percentVar[1])
 
 dataGG <- data.frame(PC1 = PCA_raw$x[,1], PC2 = PCA_raw$x[,2],
-                     Sample = sampleInfo$source_name_ch1,
-                     Batch = sampleInfo$characteristics_ch1.1)
+                     Sample = sampleInfo$`histology:ch1`,
+                     Batch = sampleInfo$characteristics_ch1.2)
 
 png(paste0(save_dir, "PCA_neqc_data.png"), width=1000, height=750)
 ggplot(dataGG, aes(PC1, PC2)) +
@@ -285,15 +296,16 @@ ggplot(dataGG, aes(PC1, PC2)) +
   xlab(paste0("PC1, VarExp: ", percentVar[1], "%")) +
   ylab(paste0("PC2, VarExp: ", percentVar[2], "%")) +
   theme(plot.title = element_text(hjust = 0.5))+
-  scale_shape_manual(values = c(4,15)) + 
+  scale_shape_manual(values = c(4,15)) +
   scale_color_manual(values = c("darkorange2", "dodgerblue4"))
 dev.off()
+
 
 
 ####3.1 dealing with batch effects ##################
 # PLOT MDS ####
 png(paste0(save_dir, "MDS_neqc_data.png"), width=1000, height=750)
-plotMDS(project.bgcorrect.norm$E, labels=targetinfo$Group, main= "MDS data after neqc")
+plotMDS(project.bgcorrect.norm$E, labels=targetinfo$source_name_ch1, main= "MDS data after neqc")
 dev.off()
 ###
 
@@ -320,13 +332,13 @@ table(NoSymbol) # FALSE  TRUE
 #                 35966 12837
 
 table(isexpr)#    FALSE  TRUE 
-#                 17897 30906
+#                 16432  32371 
 
 
 ## filter out probes
 project.bgcorrect.norm.filt <- project.bgcorrect.norm[!Control & !NoSymbol & isexpr, ]
 print("Dimensions of data after neqc and filtering")
-dim(project.bgcorrect.norm.filt)     #26225   116
+dim(project.bgcorrect.norm.filt)     #27097      166
 
 write.table(dim(project.bgcorrect.norm.filt), file = paste0(save_dir, "dimensions_project_bgcorrect_norm_filt.csv"))
 
@@ -342,7 +354,7 @@ IQR <- apply(project.bgcorrect.norm.filt$E, 1, IQR, na.rm = TRUE)
 topVar <- order(IQR, decreasing = TRUE)[1:500]
 d <- dist(t(project.bgcorrect.norm.filt$E[topVar, ]))
 png(paste0(save_dir, "cluster_dendogram_after_neqc_and_filtering.png"), width=1000, height=750)
-plot(hclust(d))
+plot(hclust(d), labels = project.bgcorrect.norm.filt$targets$source_name_ch1)
 dev.off()
 
 ##
@@ -380,7 +392,7 @@ head(project.bgcorrect.norm.filt$genes)
 project.bgcorrect.norm.filt.mean <- avereps(project.bgcorrect.norm.filt,
                                             ID = project.bgcorrect.norm.filt$genes$Symbol)
 print("Dimensions after neqc, filt and mean")
-dim(project.bgcorrect.norm.filt.mean) # 19485   116
+dim(project.bgcorrect.norm.filt.mean) # 20008    166
 
 write.table(dim(project.bgcorrect.norm.filt.mean), file = paste0(save_dir, "dimensions_project_bgcorrect_norm_filt_mean.csv"))
 
@@ -397,11 +409,11 @@ for (i in 1:6)
 
 # 4. DIFFERENTIAL EXPRESSION ######################
 
-design<- model.matrix(~0 + targetinfo$Group)
+design<- model.matrix(~0 + targetinfo$source_name_ch1)
 colnames(design)
 
 ## the column names are a bit ugly, so we will rename
-colnames(design) <- c("Adjacent_non_tumor","Lung_Adenocarcinoma")
+colnames(design) <- c("Lung_cancer","non_malignant")
 
 #calculate arrays
 aw <- arrayWeights(project.bgcorrect.norm.filt.mean, design)
@@ -426,7 +438,7 @@ dev.off()
 
 
 #### make contrasts and ebayes ####
-contrasts <- makeContrasts(Lung_Adenocarcinoma - Adjacent_non_tumor, levels = design)
+contrasts <- makeContrasts(Lung_cancer - non_malignant, levels = design)
 #Finally, apply the empirical Bayes’ step to get our differential expression statistics and p-values.
 contr.fit <- eBayes(contrasts.fit(fit, contrasts), trend = TRUE)
 topTable(contr.fit)
@@ -471,8 +483,11 @@ vennDiagram(results)
 dev.off()
 
 #summary #
-print("Sumarry expression")
+print("Summary expression")
 summary(results)
+
+
+
 
 
 
@@ -499,7 +514,9 @@ ggplot(full_results, aes(x = logFC, y=B)) + geom_point() +
 dev.off()
 
 
-
+###
+###
+###
 ## change according to your needs
 p_cutoff <- 0.001
 fc_cutoff <- 2
@@ -526,7 +543,7 @@ dev.off()
 
 
 print("AdjPval > 0.05")
-length(which(full_results$adj.P.Val < 0.05))
+length(which(full_results$adj.P.Val < 0.05)) #13752
 
 
 #### plot genes expression ############
@@ -535,10 +552,12 @@ library(dplyr); library(tidyr); library(ggplot2)
 as_data <- as.data.frame(project.bgcorrect.norm.filt.mean$E, SKIP=0 )
 as_data$genes <- rownames(as_data)
 
-data_long <- gather(as_data, IDATfile, log_fold, GSM813411:GSM813526, factor_key=FALSE)
-data_long
+data_long <- gather(as_data, source_name_ch1, log_fold, GSM1941120:GSM1941285, factor_key=FALSE)
 
-data_long <- merge(data_long, targetinfo, by  = "IDATfile") 
+targetinfo <- targetinfo[3:4]
+data_long <- merge(data_long, targetinfo, by.x = "source_name_ch1", by.y="geo_accession") 
+
+colnames(data_long) <- c("Sample", "genes", "log_fold", "Group")
 
 
 plot_gene <- function(data, title){
