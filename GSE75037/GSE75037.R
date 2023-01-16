@@ -542,7 +542,7 @@ dev.off()
 print("Summary expression")
 summary(results)
 
-
+write.table(summary(results), "regulation.csv")
 
 
 
@@ -570,7 +570,9 @@ filter(full_results, Symbol %in% genes_interest) %>%
 png(paste0(save_dir, "volcanoplot.png"), width=1000, height=750)
 ggplot(full_results, aes(x = logFC, y=B)) + geom_point() +
   ggtitle(paste0(my_id," Volcano Plot")) +
-  theme(plot.title = element_text(hjust = 0.5))
+  theme_classic() +
+  theme(plot.title = element_text(hjust = 0.5),
+        panel.border = element_rect(colour = "black", fill=NA, linewidth=1))# font size of y ticks)
 dev.off()
 
 
@@ -582,13 +584,18 @@ p_cutoff <- 0.001
 fc_cutoff <- 2
 
 #volcanoplot with cutoffs
-png(paste0(save_dir, "volcanoplot_cutoff.png"), width=1000, height=750)
+png(paste0(save_dir, "volcanoplot_cutoff.png"), width=600, height=800)
 full_results %>% 
   mutate(Significant = adj.P.Val < p_cutoff, abs(logFC) > fc_cutoff ) %>% 
   ggplot(aes(x = logFC, y = B, col=Significant)) + geom_point() +
   ggtitle(paste0(my_id, " Volcano Plot")) +
-  theme(plot.title = element_text(hjust = 0.5))
+  theme_classic() +
+  theme(plot.title = element_text(hjust = 0.5),
+        panel.border = element_rect(colour = "black", fill=NA, linewidth=1))# font size of y ticks)
 dev.off()
+
+
+
 
 
 ## plot SA ######################
@@ -620,10 +627,15 @@ data_long <- merge(data_long, targetinfo, by.x = "source_name_ch1", by.y="geo_ac
 
 colnames(data_long) <- c("Sample", "genes", "log_fold", "Group")
 
+#save data
+write.csv(data_long, paste0(save_dir, "data_long.csv"))
+
+
+###################plot per gene
 
 plot_gene <- function(data, title){
   ggplot(data, aes(x= Group, log_fold)) +
-    geom_boxplot(outlier.shape = NA, color= "black",fill= c("lightcoral", "cornflowerblue")) +
+    geom_boxplot(outlier.shape = NA, color= "black", fill= c("gray60", "gray33")) +
     geom_jitter(width=0.08, height = 0.5, size= 2.0, color= "black") +
     ggtitle(data$genes, subtitle = my_id) +# We'll make this a jitter plot
     ylab("Expression") + 
@@ -638,20 +650,22 @@ plot_gene <- function(data, title){
 }
 
 
-#save data
-write.csv(data_long, paste0(save_dir, "data_long.csv"))
+
 
 
 
 ###filter for genes of interest
 SLC22A1_table <- data_long %>%
-  filter(genes == "SLC22A1")
+  filter(genes == "SLC22A1") %>%
+  write.csv("SLC22A1.csv")
 
 SLC22A4_table <- data_long %>%
-  filter(genes == "SLC22A4")
+  filter(genes == "SLC22A4")  %>%
+  write.csv("SLC22A4.csv")
 
 SLC22A5_table <- data_long %>%
-  filter(genes == "SLC22A5")
+  filter(genes == "SLC22A5")  %>%
+  write.csv("SLC22A5.csv")
 
 
 
@@ -667,8 +681,8 @@ plot_gene(SLC22A5_table, paste0(save_dir,"SLC22A5_expression.png"))
 ###################### plot all SLC22 genes in boxplot
 #table
 SLC22 <- data_long %>%
-  filter(stringr::str_detect(genes, "SLC22A"))
-
+  filter(stringr::str_detect(genes, "SLC22A")) %>%
+  write.csv("SLC22A.csv")
 
 plot_all_genes <- function(data, title){
   ggplot(data, aes(x= genes ,log_fold, fill=Group))  +
@@ -682,7 +696,7 @@ plot_all_genes <- function(data, title){
           axis.text.x = element_text(size=16, angle = 90), #font size of x ticks
           axis.text.y = element_text(size=12))+ # font size of y ticks
     scale_y_continuous(breaks = round(seq(min(data$log_fold), max(data$log_fold), by = 0.5),1))+
-    scale_fill_manual(values=c("lightcoral", "cornflowerblue"))
+    scale_fill_manual(values=c("gray60", "gray33"))
   ggsave(title, width = 35,height = 20, units="cm")
 }
 
@@ -693,8 +707,49 @@ plot_all_genes(SLC22, paste0(save_dir,"SLC22_expression.png"))
 
 
 stats = full_results[,c("Symbol","logFC", "AveExpr", "t", "P.Value", "adj.P.Val", "B")]
-write.csv(stats, paste0(save_dir, "all_stats_proteins"))
+write.csv(stats, paste0(save_dir, "all_stats_proteins.csv"))
 
 
+
+
+#################new volcano
+library(EnhancedVolcano)
+#The default cut-off for log2FC is >|2|; the default cut-off for P value is 10e-6.
+
+keyvals.colour <- ifelse(
+  full_results$logFC < -2, 'royalblue',
+  ifelse(full_results$logFC > 2, 'red',"grey"))
+names(keyvals.colour)[keyvals.colour == 'red'] <- 'Up-regulated'
+names(keyvals.colour)[keyvals.colour == 'grey'] <- 'Not-Significant'
+names(keyvals.colour)[keyvals.colour == 'royalblue'] <- 'Down-regulated'
+
+
+
+png(paste0(save_dir, "enhanced_volcano.png"), width=700, height=900)
+EnhancedVolcano(full_results,
+                lab = "",
+                x = 'logFC',
+                y = 'adj.P.Val',
+                FCcutoff = 2.0,
+                title = my_id,
+                subtitle = "Differential expression Adenocarcinomas(n=83) and matched adjacent non-malignant lung (n=83)",
+                cutoffLineType = 'twodash',
+                cutoffLineWidth = 0.8,
+                pointSize = 4.0,
+                labSize = 6.0,
+                colAlpha = 1,
+                colCustom = keyvals.colour,
+                legendLabels=c('Not sig.','Log (base 2) FC','p-value',
+                               'p-value & Log (base 2) FC'),
+                col = c('grey', 'grey', 'grey', 'red3'),
+                legendPosition = 'bottom',
+                legendLabSize = 16,
+                legendIconSize = 5.0,
+                gridlines.major = FALSE,
+                gridlines.minor = FALSE,
+                border = 'full',
+                borderWidth = 1.0,
+                borderColour = 'black')
+dev.off()
 
 

@@ -78,6 +78,13 @@ x <- data.matrix(x[,1:ncol(x)])
 ######################################## prepare targetinfo
 sampleInfo <- pData(expr)
 
+
+table(sampleInfo$gender)
+
+
+table(sampleInfo$`Sex:ch1`)
+
+
 targetinfo <- data.frame(matrix(NA, nrow = 151, ncol=0))
 rownames(targetinfo) <- sampleInfo$geo_accession
 targetinfo = sampleInfo[, c("description.1", "characteristics_ch1", "age:ch1", "Sex:ch1", "tissue:ch1", "packyears:ch1", "ID:ch1", "copd:ch1", "bmi:ch1")]
@@ -142,14 +149,14 @@ write.table(dim(project), file = paste0(save_dir, "dimensions_project.csv"))
 
 # plot densities raw data and save
 png(paste0(save_dir, "densities_rawdata.png"), width=1200, height=850)
-plotDensities(project, legend=FALSE, main= "Densities raw data")
+plotDensities(project, legend=FALSE, main= paste0(my_id," Densities raw data"))
 dev.off() # a function call to save the file
 
 
 ### boxplot raw intensities
 png(paste0(save_dir, "boxplot_rawdata.png"), width=1200, height=750)
 boxplot(log2(project$E),range=0, ylab="log2 intensity",
-        main= "Boxplot of log2-intensiyties for RAW data")
+        main= paste0(my_id, " Boxplot of log2-intensiyties for RAW data"))
 dev.off()
 
 
@@ -167,10 +174,10 @@ data_raw <- data.frame(PC1 = PCA_raw$x[,1], PC2 = PCA_raw$x[,2],
 png(paste0(save_dir, "pca_rawdata.png"), width=1200, height=850)
 ggplot(data_raw, aes(PC1, PC2)) +
   geom_point(aes(colour = Batch, shape = Sample), size=4) +
-  ggtitle("PCA plot of the log-transformed raw expression data") +
+  ggtitle(paste0(my_id, " PCA plot of the log-transformed raw expression data")) +
   xlab(paste0("PC1, VarExp: ", percentVar[1], "%")) +
   ylab(paste0("PC2, VarExp: ", percentVar[2], "%")) +
-  theme(plot.title = element_text(hjust = 0.5))
+  theme(plot.title = element_text(hjust = 0.5, size=23, face="bold"), plot.subtitle = element_text(size=20))
 dev.off()
 
 
@@ -186,13 +193,13 @@ project.bgcorrect.norm <- neqc(project, offset = 16)
 
 # save hisgoram from data after neqc#
 png(paste0(save_dir, "hist_data_after_neqc.png"), width=800, height=750)
-hist(project.bgcorrect.norm$E, main = "histogram of NEQC data")
+hist(project.bgcorrect.norm$E, main = paste0(my_id," histogram of NEQC data"))
 dev.off()
 
 
 # plot densities after neqd data and save
 png(paste0(save_dir, "densities_after_neqc.png"), width=1200, height=850)
-plotDensities(project.bgcorrect.norm, legend=FALSE, main= "Densities after neqc data")
+plotDensities(project.bgcorrect.norm, legend=FALSE, main= paste0(my_id," Densities after neqc data"))
 dev.off() # a function call to save the file
 
 
@@ -218,7 +225,7 @@ write.table(dim(project.bgcorrect.norm), file = paste0(save_dir, "dimensions_pro
 
 # save densities from data after neqc#
 png(paste0(save_dir, "densities_data_after_neqc.png"), width=800, height=750)
-plotDensities(project.bgcorrect.norm, legend=FALSE, main = "Densities data after neqc")
+plotDensities(project.bgcorrect.norm, legend=FALSE, main = paste0(my_id, " Densities data after neqc"))
 dev.off()
 
 
@@ -233,11 +240,11 @@ par(mfrow = c(2,1))
 
 boxplot(log2(project$E[project$genes$Source == "ILMN_Controls", ]),
         range = 0, las = 2, xlab = "", ylab = expression(log[2](intensity)),
-        main = "Control probes, RAW data")
+        main = paste0(my_id," Control probes, RAW data"))
 
 boxplot(log2(project$E),
         range = 0, las = 2, xlab = "", ylab = expression(log[2](intensity)),
-        main = "Regular probes, RAW data")
+        main = paste0(my_id," Regular probes, RAW data"))
 dev.off()
 ###
 
@@ -248,16 +255,24 @@ par(mfrow = c(2,1))
 
 boxplot(project.bgcorrect.norm$E[project$genes$Source == "ILMN_Controls", ],
         range = 0, las = 2, xlab = "", ylab = expression(log[2](intensity)),
-        main = "Control probes, NEQC data")
+        main = paste0(my_id," Control probes, NEQC data"))
 
 boxplot(project.bgcorrect.norm$E, range = 0, ylab = expression(log[2](intensity)),
-        las = 2, xlab = "", main = "Regular probes, NEQC normalized")
+        las = 2, xlab = "", main = paste0(my_id, " Regular probes, NEQC normalized"))
 dev.off()
 ####
 
 # print table with the different ILMN probes in the data
 table(project.bgcorrect.norm$genes$Source)
 ##
+
+
+##plot boxplot again in log2 scale
+png(paste0(save_dir, "boxplots_probes_after_neqc_log2.png"), width=1200, height=750)
+boxplot(log2(project.bgcorrect.norm$E),range=0,ylab="log2 intensity", main =paste0(my_id, " Boxplot probes log2 after neqc"))
+dev.off()
+
+
 
 
 
@@ -292,23 +307,21 @@ dataGG <- data.frame(PC1 = PCA_raw$x[,1], PC2 = PCA_raw$x[,2],
                      Sample = targetinfo$`copd:ch1`,
                      Batch = targetinfo$`Sex:ch1`)
 
-png(paste0(save_dir, "PCA_neqc_data.png"), width=1000, height=750)
+png(paste0(save_dir, "PCA_neqc_data.png"), width=700, height=500)
 ggplot(dataGG, aes(PC1, PC2)) +
   geom_point(aes(colour = Batch, shape = Sample)) +
   ggtitle("PCA plot of the log-transformed neqc expression data") +
   xlab(paste0("PC1, VarExp: ", percentVar[1], "%")) +
   ylab(paste0("PC2, VarExp: ", percentVar[2], "%")) +
-  theme(plot.title = element_text(hjust = 0.5))+
-  scale_shape_manual(values = c(4,15)) + 
-  scale_color_manual(values = c("darkorange2", "dodgerblue4"))
+  theme(plot.title = element_text(hjust = 0.5))
 dev.off()
 
 
 
 ####3.1 dealing with batch effects ##################
 # PLOT MDS ####
-png(paste0(save_dir, "MDS_neqc_data.png"), width=1000, height=750)
-plotMDS(project.bgcorrect.norm$E, labels=targetinfo$`copd:ch1`, main= "MDS data after neqc")
+png(paste0(save_dir, "MDS_neqc_data.png"), width=800, height=600)
+plotMDS(project.bgcorrect.norm$E, labels=targetinfo$`copd:ch1`, main= paste0(my_id, " MDS data after neqc"))
 dev.off()
 ###
 
@@ -317,7 +330,7 @@ dev.off()
 #### avg signal from neqc data ####
 aveSignal <- rowMeans(project.bgcorrect.norm$E)
 png(paste0(save_dir, "avg_signal_neqc_data.png"), width=1000, height=750)
-boxplot(aveSignal, main = "Average signal data after neqc")
+boxplot(aveSignal, main = paste0(my_id, " Average signal data after neqc"))
 dev.off()
 
 
@@ -352,7 +365,7 @@ write.table(dim(project.bgcorrect.norm.filt), file = paste0(save_dir, "dimension
 
 ## densities from neqc and filtered data ##
 png(paste0(save_dir, "densities_data_after_neqc_filtering.png"), width=1000, height=750)
-plotDensities(project.bgcorrect.norm.filt, legend=FALSE, main = "Densities data after bg correction")
+plotDensities(project.bgcorrect.norm.filt, legend=FALSE, main = paste0(my_id, " Densities data after bg correction"))
 dev.off()
 
 
@@ -374,7 +387,7 @@ dev.off()
 ## avg singal after neqc and filt
 aveSignal <- rowMeans(project.bgcorrect.norm.filt$E)
 png(paste0(save_dir, "avg_signal_neqc_filt.png"), width=1000, height=750)
-boxplot(aveSignal)
+boxplot(aveSignal, main= paste0(my_id, " Avg Signal after normalization and filt"))
 dev.off()
 
 
@@ -406,7 +419,8 @@ for (i in 1:6)
 {
   name = paste(save_dir, "QC_neqc_filt_mean_histogram",i,".jpg",sep="")
   jpeg(name)
-  hist(project.bgcorrect.norm.filt.mean$E[,i],lwd=2, ylab='Density',xlab='Log2 intensities',main=project.bgcorrect.norm.filt.mean$targets$IDATfile[i])
+  hist(project.bgcorrect.norm.filt.mean$E[,i],lwd=2, ylab='Density',xlab='Log2 intensities',
+       main= paste0("dataset: ", my_id, " ", "sample: ", project.bgcorrect.norm.filt.mean$targets$IDATfile[i]))
   dev.off()
 }
 
@@ -423,32 +437,31 @@ design<- model.matrix(~0 +targets)
 colnames(design) <- c("Control", "COPD")
 design
 
-#calculate arrays
+#calculate array weights
 aw <- arrayWeights(project.bgcorrect.norm.filt.mean, design)
 fit <- lmFit(project.bgcorrect.norm.filt.mean, design, weights = aw)
 fit
 
-#calculate array weight
-aw <- arrayWeights(project.bgcorrect.norm.filt.mean, design)
-fit <- lmFit(project.bgcorrect.norm.filt.mean, design, weights= aw)
-
 
 ## plot weights ##
 png(paste0(save_dir, "weights.png"), width=1000, height=750)
-barplot(aw, xlab="Array", ylab="Weight", col="white", las=2)
+barplot(aw, xlab="Array", ylab="Weight", col="white", las=2, main= paste0(my_id, " Weights"))
 abline(h=1, lwd=1, lty=2)
 dev.off()
 
 
 ## histogram fit Amean
 png(paste0(save_dir, "histogram_fit_mean.png"), width=1000, height=750)
-hist(fit$Amean)
+hist(fit$Amean, main = paste0(my_id, " histogram fit Amean"))
 dev.off()
 
 #### plot sa ####
 png(paste0(save_dir, "plot_SA.png"), width=1000, height=750)
-plotSA(fit, main="Final model: Mean-variance trend")
+plotSA(fit, main= paste0(my_id, " Final model: Mean-variance trend"))
 dev.off()
+
+
+
 
 
 
@@ -457,32 +470,37 @@ dev.off()
 contrasts <- makeContrasts(COPD- Control, levels = design)
 #Finally, apply the empirical Bayes’ step to get our differential expression statistics and p-values.
 contr.fit <- eBayes(contrasts.fit(fit, contrasts), trend = TRUE)
+contr.fit
+
 topTable(contr.fit)
 #decidetests and save venn diagram
 results <- decideTests(contr.fit, method= "global", lfc=1)
 
 
 
+
+
+
 ##########################################################
 ## plot mds ## 
 png(paste0(save_dir, "MDS_fit.png"), width=1000, height=750)
-plotMD(fit, coef=1,main="Mean-Difference Plot of fit, coef=1")
+plotMD(fit, coef=1,main=paste0(my_id, " Mean-Difference Plot of fit, coef=1"))
 dev.off()
 
 
 png(paste0(save_dir, "SA_fit.png"), width=1000, height=750)
-plotSA(fit,main="Residual standard deviation versus average log expression for fit")
+plotSA(fit, main= paste0(my_id, " Residual standard deviation versus average log expression for fit"))
 dev.off()
 
 ## plot MDs after ebayes
 png(paste0(save_dir, "MDS_fit_after_ebayes.png"), width=1000, height=750)
-plotMD(contr.fit, coef=1,main="Mean-Difference Plot of fit2 (after ebayes), coef=1")
+plotMD(contr.fit, coef=1, main= paste0(my_id, " Mean-Difference Plot of fit2 (after ebayes), coef=1"))
 abline(0,0,col="blue")
 dev.off()
 
 
 png(paste0(save_dir, "SA_fit_after_ebayes.png"), width=1000, height=750)
-plotSA(contr.fit,main="Residual standard deviation versus average log expression for fit2 (after ebayes)")
+plotSA(contr.fit,main= paste0(my_id, " Residual standard deviation versus average log expression for fit2 (after ebayes)"))
 abline(0,0,col="blue")
 dev.off()
 
@@ -503,7 +521,7 @@ print("Sumary expression")
 summary(results)
 
 
-
+write.table(summary(results), "regulation.csv")
 
 
 
@@ -526,7 +544,7 @@ filter(full_results, Symbol %in% genes_interest) %>%
 ### volcano plot ####
 png(paste0(save_dir, "volcanoplot.png"), width=1000, height=750)
 ggplot(full_results, aes(x = logFC, y=B)) + geom_point() +
-  ggtitle("Volcano Plot") +
+  ggtitle(paste0(my_id, " Volcano Plot") )+
   theme(plot.title = element_text(hjust = 0.5))
 dev.off()
 
@@ -542,15 +560,16 @@ fc_cutoff <- 2
 png(paste0(save_dir, "volcanoplot_cutoff.png"), width=1000, height=750)
 full_results %>% 
   mutate(Significant = adj.P.Val < p_cutoff, abs(logFC) > fc_cutoff ) %>% 
-  ggplot(aes(x = logFC, y = B, col=Significant)) + geom_point()
-ggtitle("Volcano Plot") +
+  ggplot(aes(x = logFC, y = B, col=Significant)) +
+  geom_point() +
+  ggtitle(paste0(my_id, " Volcano Plot")) +
   theme(plot.title = element_text(hjust = 0.5))
 dev.off()
 
 #
 ## plot SA ######################
 png(paste0(save_dir, "plot_SA_contrfit.png"), width=1000, height=750)
-plotSA(contr.fit, main="Final model: Mean-variance trend")
+plotSA(contr.fit, main= paste0(my_id, " Final model: Mean-variance trend"))
 dev.off()
 
 ## plot MD #######################
@@ -568,7 +587,7 @@ length(which(full_results$adj.P.Val < 0.05))
 
 ##########-------------
 #### plot genes expression ############
-library(dplyr); library(tidyr); library(ggplot2)
+library(dplyr); library(tidyr); library(ggplot2); library(stringr)
 
 as_data <- as.data.frame(project.bgcorrect.norm.filt.mean$E, SKIP=0 )
 as_data$genes <- rownames(as_data)
@@ -580,7 +599,12 @@ data_long
 targetinfo$IDATfile <- rownames(targetinfo)
 targetinfo <- targetinfo[,c("IDATfile", "copd:ch1", "description.1")]
 data_long <- merge(data_long, targetinfo, by  = "IDATfile") 
-data_long <- data_long %>% rename("Group" = "copd:ch1")
+names(data_long)[4]<- "Group"
+
+
+data_long <- data_long %>%
+  mutate(across("Group", str_replace, "cont", "Control")) %>%
+  mutate(across("Group", str_replace, "case", "COPD"))
 
 
 
@@ -588,27 +612,29 @@ data_long <- data_long %>% rename("Group" = "copd:ch1")
 
 
 
+
+
+write.csv(data_long, "data_long.csv")
 
 
 ############################# new
 
 plot_gene <- function(data, title){
   ggplot(data, aes(x= Group, log_fold)) +
-    geom_boxplot(outlier.shape = NA) +
-    geom_jitter(width=0.1, height = 0.5, size= 2.0, color= "darkblue") +
-    ggtitle(data$genes) +# We'll make this a jitter plot
+    geom_boxplot(outlier.shape = NA, color= "black",fill= c("gray33", "gray60")) +
+    geom_jitter(width=0.08, height = 0.5, size= 2.0, color= "black") +
+    ggtitle(data$genes, subtitle = my_id) +# We'll make this a jitter plot
     ylab("Expression") + 
     theme_classic() +
     theme(plot.title = element_text(hjust = 0.5, size=24), 
           axis.title = element_text(size = 20), # font size of axis
           axis.text.x = element_text(size=16), #font size of x ticks
-          axis.text.y = element_text(size=14))+ # font size of y ticks
+          axis.text.y = element_text(size=14),
+          panel.border = element_rect(colour = "black", fill=NA, linewidth=1))+ # font size of y ticks
     scale_y_continuous(breaks = round(seq(min(data$log_fold), max(data$log_fold), by = 0.5),1))
-  ggsave(title)
+  ggsave(title, width = 15,height = 25, units="cm")
 }
 
-
-write.csv(data_long, file = "data_long.csv")
 
 
 
@@ -701,6 +727,88 @@ dev.off()
 
 
 
+#############################
+######################plot all SLC22 genes in boxplot
+#table
+SLC22 <- data_long %>%
+  filter(stringr::str_detect(genes, "SLC22A"))
+
+
+plot_all_genes <- function(data, title){
+  ggplot(data, aes(x= genes ,log_fold, fill=Group))  +
+    geom_boxplot(outlier.shape = NA, color= "black", position="dodge") +
+    ggtitle(my_id, subtitle="cohort: subjects with COPD (n=111) and control smokers (n=40)") +
+    ylab("Log2(counts+1)") + 
+    xlab("") +
+    theme_classic() +
+    theme(plot.title = element_text(hjust = 0.5, size=20), 
+          axis.title = element_text(size = 18), # font size of axis
+          axis.text.x = element_text(size=16, angle = 90), #font size of x ticks
+          axis.text.y = element_text(size=12))+ # font size of y ticks
+    scale_y_continuous(breaks = round(seq(min(data$log_fold), max(data$log_fold), by = 0.5),1))+
+    scale_fill_manual(values=c("gray33", "gray60"))
+  ggsave(title, width = 35,height = 20, units="cm")
+}
+
+#plot and save
+plot_all_genes(SLC22, paste0(save_dir,"SLC22_expression.png"))
+
+
+
+stats = full_results[,c("Symbol","logFC", "AveExpr", "t", "P.Value", "adj.P.Val", "B")]
+write.csv(stats, "all_stats_proteins.csv")
+
+
+
+
+
+#write csv full results
+write.csv(full_results, paste0(save_dir ,"FULL_RESULTS.csv"))
+
+
+
+
+#################new volcano
+library(EnhancedVolcano)
+#The default cut-off for log2FC is >|2|; the default cut-off for P value is 10e-6.
+
+
+keyvals.colour <- ifelse(
+  full_results$logFC < -1, 'royalblue',
+  ifelse(full_results$logFC > 1, 'red',"grey"))
+names(keyvals.colour)[keyvals.colour == 'red'] <- 'Up-regulated'
+names(keyvals.colour)[keyvals.colour == 'grey'] <- 'Not-Significant'
+names(keyvals.colour)[keyvals.colour == 'royalblue'] <- 'Down-regulated'
+
+
+
+png(paste0(save_dir, "enhanced_volcano.png"), width=700, height=900)
+EnhancedVolcano(full_results,
+                lab = "",
+                x = 'logFC',
+                y = 'adj.P.Val',
+                pCutoff = 0.001,
+                FCcutoff = 1,
+                title = my_id,
+                subtitle = "Differential expression: COPD samples (n=111) and control smokers (n=40)",
+                cutoffLineType = 'twodash',
+                cutoffLineWidth = 0.8,
+                pointSize = 4.0,
+                labSize = 6.0,
+                colAlpha = 1,
+                colCustom = keyvals.colour,
+                legendLabels=c('Not sig.','Log (base 2) FC','p-value',
+                               'p-value & Log (base 2) FC'),
+                col = c('grey', 'grey', 'grey', 'red3'),
+                legendPosition = 'bottom',
+                legendLabSize = 16,
+                legendIconSize = 5.0,
+                gridlines.major = FALSE,
+                gridlines.minor = FALSE,
+                border = 'full',
+                borderWidth = 1.0,
+                borderColour = 'black')
+dev.off()
 
 
 

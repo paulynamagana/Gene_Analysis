@@ -616,6 +616,14 @@ rm(data_raw, design, project, annot)
 
 
 
+
+
+
+
+
+
+
+
 #### plot genes expression ############
 library(dplyr); library(tidyr); library(ggplot2); library(ggpubr)
 

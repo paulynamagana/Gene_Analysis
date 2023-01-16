@@ -33,10 +33,11 @@
 *.RDataTmp
 **/latex/**
 **/figure-latex/**
-*.png
 *.jpg
 **/HGU133Plus2cdf/**
 **/gpl16311hgu133plus2hsentrezg.cdf.gzcdf/**
 *.zip
 *.csv
 *.txt
+**.png
+**/**.json
